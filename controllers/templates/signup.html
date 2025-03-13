@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-Student SignUp
+    SignUp
 {% endblock %}
 
 {% block content %}
@@ -9,41 +9,30 @@ Student SignUp
     <div class="col-md-10 mx-auto col-lg-7">
         <form action="{{ url_for('signup') }}" method="POST" enctype="multipart/form-data"
             class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
-            <h4 class="text-center fs-2">Customer Signup</h4>
+            <h4 class="text-center fs-2">Welcome to Quiz Masters</h4>
+            <h5 class="text-center fs-5 text-muted">Learn, Test, and Ace</h5>
 
             <!-- Fullname -->
             <div class="mb-3 my-4 row">
-                <div class="col-4 my-auto d-md-flex fs-4 fw-normal"><label for="floatingFullname">Fullname : </label>
-                </div>
+                <div class="col-4 my-auto d-md-flex fs-4 fw-normal"><label for="floatingFullname">Fullname : </label></div>
                 <div class="col-8">
                     <input type="text" class="form-control tall-input" id="floatingFullname" name="fullname"
                         placeholder="Full name (e.g., John Doe)" required>
                 </div>
             </div>
 
-            <!-- Qualification -->
+            <!-- Email ID -->
             <div class="mb-3 my-4 row">
-                <div class="col-4 my-auto d-md-flex fs-4 fw-normal"><label for="qualifications">Qualification : </label>
-                </div>
+                <div class="col-4 my-auto d-md-flex fs-4 fw-normal"><label for="floatingEmail">Email ID : </label></div>
                 <div class="col-8">
-                    <select name="qualification" id="qualifications" class="form-control rounded-3 mt-2" required>
-                        {% if qualifications %}
-                        <option value="" disabled selected>--Please choose a qualification--</option>
-                        {% for qualification in qualifications %}
-                        <option value="{{qualification}}">{{qualification}}</option>
-                        {% endfor %}
-                        {% else %}
-                        <option value="" disabled selected>--No Qualifications are available--</option>
-                        {% endif %}
-                    </select>
+                    <input type="email" class="form-control tall-input" id="floatingEmail" name="email"
+                        placeholder="Email (e.g., user@domain.com)" required>
                 </div>
             </div>
 
-
             <!-- Username -->
             <div class="mb-3 my-4 row">
-                <div class="col-4 my-auto d-md-flex fs-4 fw-normal"><label for="floatingsUsername">Username : </label>
-                </div>
+                <div class="col-4 my-auto d-md-flex fs-4 fw-normal"><label for="floatingsUsername">Username : </label></div>
                 <div class="col-8">
                     <input type="text" class="form-control tall-input" id="floatingsUsername" name="username"
                         placeholder="Username (letters & numbers)" required>
@@ -60,41 +49,29 @@ Student SignUp
                 </div>
             </div>
 
-            <!-- Email ID -->
+            <!-- Qualification -->
             <div class="mb-3 my-4 row">
-                <div class="col-4 my-auto d-md-flex fs-4 fw-normal"><label for="floatingEmail">Email ID : </label></div>
+                <div class="col-4 my-auto d-md-flex fs-4 fw-normal"><label for="qualifications">Qualification : </label></div>
                 <div class="col-8">
-                    <input type="email" class="form-control tall-input" id="floatingEmail" name="email"
-                        placeholder="Email (e.g., user@domain.com)" required>
-                </div>
-            </div>
-
-            <!-- Contact no. -->
-            <div class="mb-3 my-4 row">
-                <div class="col-4 my-auto d-md-flex fs-4 fw-normal"><label for="floatingContact">Phone no. : </label>
-                </div>
-                <div class="col-8">
-                    <input type="text" class="form-control tall-input mt-1" id="floatingContact" name="contact_no"
-                        placeholder="10-digit contact number (e.g., 1234567890)" required>
+                    <select name="qualification" id="qualifications" class="form-control rounded-3 mt-2" required>
+                        {% if qualifications %}
+                        <option value="" disabled selected>--Please choose a qualification--</option>
+                        {% for qualification in qualifications %}
+                        <option value="{{qualification}}">{{qualification}}</option>
+                        {% endfor %}
+                        {% else %}
+                        <option value="" disabled selected>--No Qualifications are available--</option>
+                        {% endif %}
+                    </select>
                 </div>
             </div>
 
             <!-- Document Upload -->
             <div class="mb-3 my-4 row">
-                <div class="col-4 my-auto d-md-flex fs-4 fw-normal"><label for="documentUpload">Attach document : (pdf
-                        only) </label></div>
+                <div class="col-4 my-auto d-md-flex fs-4 fw-normal"><label for="documentUpload">Attach document : (pdf only) </label></div>
                 <div class="col-8">
                     <input type="file" class="form-control tall-input mt-1" id="documentUpload" name="document"
                         accept=".pdf" required>
-                </div>
-            </div>
-
-            <!-- address -->
-            <div class="mb-3 my-4 row">
-                <div class="col-4 my-auto d-md-flex fs-4 fw-normal"><label for="address">Address:</label></div>
-                <div class="col-8">
-                    <textarea class="form-control mt-1" id="address" name="address"
-                        placeholder="Full address (e.g., 123 Main St, Springfield)" required></textarea>
                 </div>
             </div>
 
@@ -106,6 +83,7 @@ Student SignUp
                         placeholder="Password (upper & lower case, numbers)" required>
                 </div>
             </div>
+
 
             <!-- Submit Button -->
             <button class="w-100 btn btn-lg btn-primary fs-4 mb-4" type="submit">Register</button>

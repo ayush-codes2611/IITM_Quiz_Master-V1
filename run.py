@@ -9,14 +9,15 @@ if __name__ == "__main__":
         # db.session.query(Admin).delete()
         # db.session.commit()
 
-        # admin1=Admin(email='Ay@yahoo.com', password=generate_password_hash('123456'))
+        # admin1=Admin(email='Ay@admin.com', password=generate_password_hash('123456'))
+        # quiz1=Quiz(chapter_id=1, date_of_quiz=word=, time_duration='01:00')
         # db.session.add(admin1)
         # db.session.commit()
         # professionals = Professional.query.all()
         # for prof in professionals:
         #     print(prof.document_path)
-        db.create_all()
         # db.drop_all()
+        db.create_all()
         # services=Service.query.all()
     app.run(debug=True, port=8000)
 

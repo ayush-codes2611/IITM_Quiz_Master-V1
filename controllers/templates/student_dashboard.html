@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Student_dashboard
+{% endblock %}
+
+
+{% block styles %}
+{% endblock %}
+
+{% block content %} 
+    <div class="container mt-4">
+        
+        <!-- Services Section -->
+                <h2>Upcoming Quizes</h2>
+            <table class="table table-hover">
+                {% if services %}
+                <thead>
+                    <tr>
+                        <th scope="col" class="text-center">ID</th>
+                        <th scope="col" class="text-center">No. of Questions</th>
+                        <th scope="col" class="text-center">Date</th>
+                        <th scope="col" class="text-center">Duration(hh:mm)</th>
+                        <th scope="col" class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quiz in quizes %}
+                        <tr>
+                            <th scope="col" class="text-center"><a href="{{ url_for('service_details', service_id=service.id) }}">{{ loop.index }}</a></th>
+                            <td class="text-center">{{quiz.no_of_questions}}</td>
+                            <td class="text-center">{{quiz.date_of_quiz}}</td>
+                            <td class="text-center">{{quiz.time_duration}}</td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="#" class="btn btn-outline-primary btn-sm">View</a>
+                                    <a href="#" class="btn btn-outline-primary btn-sm">Start</a>
+                            
+                                    <!-- Delete button with POST method -->
+                                    <form action="{{ url_for('delete_service', service_id=service.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this service?')">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                            
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+                {% else %}
+                    <div class="container"><h3 style="color: #808080;">Oops! Seems like no upcoming quizes. They will added soon</h3></div>
+                {% endif %}
+    </div>
+{% endblock%}

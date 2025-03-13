@@ -6,7 +6,7 @@ from email_validator import validate_email
 from flask import render_template, session, request, flash, redirect, url_for, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
 from controllers import app, db
-from controllers.models import Admin, User, Subject, Chapter,  Question, Score
+from controllers.models import Admin, User, Subject, Chapter,  Question, Score, Quiz
 import os
 import matplotlib.pyplot as plt
 from sqlalchemy import or_, and_, func
@@ -14,11 +14,11 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
-# # Testing
-# @app.route('/test')
-# def test():
-#     return render_template('dashboard.html')
+# Testing
+@app.route('/create_quiz/<int:chapter_id>')
+def create_quiz(chapter_id=None):
+    # Your logic here
+    return render_template('quiz_management.html')
 
 @app.route('/')
 @app.route('/home')
@@ -89,6 +89,8 @@ def signup():
         dob = datetime.strptime(request.form['dob'], '%Y-%m-%d').date()
         password=generate_password_hash(request.form['password'])
         qualification = request.form['qualification']
+
+
 
 
         # Handle file upload
@@ -195,18 +197,66 @@ def add_subject():
     return render_template('add_subject.html')
 
 @login_required                   
+@app.route('/admin/add_quiz', methods=['GET', 'POST'])
+def add_quiz():
+    if request.method == 'POST':
+        # Extract data from the form
+        chapter_id = int(request.form.get('chapterId'))
+        date_of_quiz = request.form.get('dateOfQuiz')
+        time_duration = request.form.get('timeDuration')
+
+        # Create a new service instance
+        new_quiz = Quiz(
+            chapter_id=chapter_id,
+            date_of_quiz=date_of_quiz,
+            time_duration=time_duration,
+            # no_of_questions=no_of_questions,
+            # remarks=remarks
+        )
+
+        # Add to the database
+        try:
+            db.session.add(new_quiz)
+            db.session.commit()
+            flash("Quiz added successfully!", "success")
+            return redirect(url_for('quiz_management'))
+        except IntegrityError as e:
+            db.session.rollback()
+            # Check for unique constraint failure
+            if "UNIQUE constraint failed" in str(e.orig):
+                # Parse the error message to extract the field name
+                error_field = str(e.orig).split(".")[-1]
+                flash(f"Error: A service with the same {error_field} already exists.", "danger")
+            else:
+                print(f"Error: {e}")
+                flash("An error occurred while adding the service.", "danger")
+            return redirect(url_for('add_quiz'))
+        except Exception as e:
+            db.session.rollback()
+            print(f"Bahut Error: {e}")
+            flash(f"An unexpected error occurred: {str(e)}", "danger")
+            # return redirect(request.url)
+
+    return render_template('add_quiz.html')
+
+@app.route('/admin/quiz_management')
+@login_required
+def quiz_management():
+    return render_template('quiz_management.html', quizes=Quiz.query.all())
+
+@login_required                   
 @app.route('/admin/add_chapter', methods=['GET', 'POST'])
 def add_chapter():
     if request.method == 'POST':
         name = request.form.get('name')
-        no_of_questions = request.form.get('noOfQuestions')
+        no_of_quizes = request.form.get('noOfQuizes')
         description = request.form.get('description')
         subject_id = int(request.form.get('subjectId'))
         print(f"Subject ID: {subject_id}")
 
         new_chapter = Chapter(
             name=name,
-            no_of_questions=no_of_questions,
+            no_of_quizes=no_of_quizes,
             description=description,
             subject_id=subject_id
         )
@@ -217,15 +267,17 @@ def add_chapter():
             return redirect(url_for('dashboard'))
         except IntegrityError as e:
             db.session.rollback()
-            print(f"Error: {e}")
+            if "UNIQUE constraint failed" in str(e):
+                flash(f"Error: A chapter with this {request.form.get('name')} already exists!", "danger")
+            else:
+                flash(f"Database error: {str(e)}", "danger")  # General error message
+            return redirect(url_for('add_chapter'))
     return render_template('add_chapter.html')
 
 
 @app.route('/dashboard')
 @login_required
-def dashboard(): 
-    # role = session.get('user_type')
-    user_id=session.get('user_id')
+def dashboard(chapter_id=None): 
     
     # if role == 'admin':
     if isinstance(current_user, Admin):
@@ -238,6 +290,7 @@ def dashboard():
     
     # if role == 'customer':
     if isinstance(current_user, User):
+        quizes = Question.query.filter_by(chapter_id=chapter_id).all()
         # services = Service.query.all()
         # customer=Customer.query.filter_by(id=user_id).first()
         # available_services = (
@@ -247,7 +300,7 @@ def dashboard():
         # .all()
         # )
         # service_history = ServiceRequests.query.filter_by(customer_id=session.get('user_id')).order_by(ServiceRequests.date_of_request.desc()).all()
-        return render_template('User_dashboard.html')
+        return render_template('student_dashboard.html', quizes=quizes)
     
     return render_template('dashboard.html')
 

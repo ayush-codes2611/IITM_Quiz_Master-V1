@@ -26,9 +26,15 @@
         height: 180px;
         object-fit: cover;
     }
-    a {
-        text-decoration: none;
-        color: inherit;
+    .video-time {
+        position: absolute;
+        bottom: 8px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        font-size: 12px;
+        padding: 3px 5px;
+        border-radius: 4px;
     }
 </style>
 {% endblock %}
@@ -43,9 +49,10 @@
                 <!-- Card 1 -->
                 <div class="col-md-4">
                     <div class="card p-3 shadow">
-                        <div class="position-relative">
+                        <!-- <div class="position-relative">
                             <img src="https://images.pexels.com/photos/31115182/pexels-photo-31115182/free-photo-of-student-taking-exam-in-classroom-setting.jpeg?auto=compress&cs=tinysrgb&w=600" class="card-img-top" alt="Quiz Image">
-                        </div>
+                            <span class="video-time">10:45</span>
+                        </div> -->
                         <div class="card-body">
                             <h6 class="fw-bold">{{ subject.name }}</h6>
                             <table class="table table-hover shadow rounded"> 
@@ -53,17 +60,15 @@
                                     <thead>
                                         <tr>
                                             <th scope="col" class="text-center border-end">Chapter Name</th>
-                                            <th scope="col" class="text-center border-end"># Quiz</th>
+                                            <th scope="col" class="text-center border-end">Questions</th>
                                             <th scope="col" class="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for chapter in subject.chapters %}
                                             <tr>
-                                                <a href="{{ url_for('create_quiz', chapter_id=chapter.id) }}">
-                                                    <td class="text-center">{{ chapter.name }}</td>
-                                                </a>
-                                                <td class="text-center">{{ chapter.no_of_quizes }}</td>
+                                                <td class="text-center">{{ chapter.name }}</td>
+                                                <td class="text-center">{{ chapter.no_of_questions }}</td>
                                                 <td class="text-center">
                                                     <div class="d-flex justify-content-center gap-2">
                                                         <a href="#" class="btn btn-outline-primary btn-sm">Edit</a>
@@ -93,39 +98,11 @@
         {% else %}
             <div class="container"><h3 style="color: #808080;">Oops! Seems like no Subjects is available. Consider creating one.</h3></div>
         {% endif %}
-        <!-- Card 2 -->
-        <div class="col-md-4">
-            <div class="card p-3 shadow">
-                <div class="position-relative">
-                    <img src="https://images.pexels.com/photos/31115182/pexels-photo-31115182/free-photo-of-student-taking-exam-in-classroom-setting.jpeg?auto=compress&cs=tinysrgb&w=600" class="card-img-top" alt="Quiz Image">
-                    <span class="video-time">12:30</span>
-                </div>
-                <div class="card-body">
-                    <h6 class="fw-bold">Quiz: Science & Technology</h6>
-                    <p class="text-muted small">Quiz Master</p>
-                    <p class="text-muted small">300K views • 1 month ago</p>
-                </div>
-            </div>
-        </div>
-        <!-- Card 3 -->
-        <div class="col-md-4">
-            <div class="card p-3 shadow">
-                <div class="position-relative">
-                    <img src="https://images.pexels.com/photos/31115182/pexels-photo-31115182/free-photo-of-student-taking-exam-in-classroom-setting.jpeg?auto=compress&cs=tinysrgb&w=600" class="card-img-top" alt="Quiz Image">
-                    <span class="video-time">08:20</span>
-                </div>
-                <div class="card-body">
-                    <h6 class="fw-bold">Quiz: History & Culture</h6>
-                    <p class="text-muted small">Quiz Master</p>
-                    <p class="text-muted small">750K views • 3 weeks ago</p>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 <div class="row mt-3">
     <div class="col text-center mt-3"> 
-        <a href="{{url_for('add_subject')}}" class="btn btn-outline-success btn-lg">+ New Subject</a>
+        <a href="{{url_for('add_quiz')}}" class="btn btn-outline-success btn-lg">+ New Quiz</a>
     </div>    
 </div>
 

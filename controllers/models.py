@@ -2,6 +2,8 @@ from datetime import date, datetime, timezone
 from controllers import db, login_manager
 from flask_login import UserMixin
 from sqlalchemy import CheckConstraint
+from sqlalchemy.ext.hybrid import hybrid_property
+
 
 # Function to load user based on ID and role
 @login_manager.user_loader
@@ -56,9 +58,9 @@ class Subject(db.Model):
 # Chapter model
 class Chapter(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text)
-    no_of_questions = db.Column(db.Integer, nullable=False) # I don't know how to use this stuff.
+    name = db.Column(db.String(200), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=False)
+    no_of_quizes = db.Column(db.Integer, nullable=False) # I don't know how to use this stuff.
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
     quizzes = db.relationship('Quiz', backref='chapter', cascade='all, delete-orphan')
 
@@ -68,10 +70,16 @@ class Quiz(db.Model):
     chapter_id = db.Column(db.Integer, db.ForeignKey('chapter.id'), nullable=False)
     date_of_quiz = db.Column(db.DateTime, default=datetime.utcnow)
     time_duration = db.Column(db.String(10))  # HH:MM format
+    no_of_questions = db.Column(db.Integer) # I don't know how to use this stuff.
     remarks = db.Column(db.Text)
     questions = db.relationship('Question', backref='quiz', cascade='all, delete-orphan')
     scores = db.relationship('Score', backref='quiz', cascade='all, delete-orphan')
-
+    
+    # Dynamically count the number of related questions
+    @hybrid_property
+    def no_of_questions(self):
+        return len(self.questions)
+    
 # Question model
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
