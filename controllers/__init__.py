@@ -7,8 +7,11 @@ from sqlalchemy import event
 
 # Initialize app and db
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///master.db'
-app.config['SECRET_KEY'] = '7564da6b69a5f4a73c57fd45'
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'app.db')
+
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///master.db'
+app.config['SECRET_KEY'] = '7564da6b69a5f4a73c57fd45' # Required for session management
 
 db = SQLAlchemy(app)  # Initialize SQLAlchemy with the app
 # migrate = Migrate(app, db)
@@ -33,7 +36,7 @@ app.jinja_env.filters['get_attribute'] = get_attribute
 
 # Login Manager setup
 login_manager = LoginManager(app)
-login_manager.login_view = "login"
+login_manager.login_view = "login" # Redirect users to 'login' view if not authenticated
 login_manager.login_message_category = "info"
 
 # Path to the static/uploads folder

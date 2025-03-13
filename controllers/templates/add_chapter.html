@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Add_Chapter
+{% endblock %}
+
+{% block content %}
+<div class="container col-xl-10 col-xxl-8 px-4 py-5">
+    <div class="row align-items-center g-lg-5 py-5">
+        <div class="col-md-10 mx-auto col-lg-5">
+            <form action="/admin/add_chapter" method="POST" class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
+                <h4 class="text-center fs-2">New Chapter</h4>
+                <!-- Subject Name -->
+                <div class="form-floating mb-3 my-4">
+                    <input type="text" class="form-control" id="name" placeholder="" name="name" required>
+                    <label for="name">Chapter Name</label>
+                </div>
+
+                <!-- Description -->
+                <div class="form-floating mb-3">
+                    <input type="text" id="description" class="form-control" placeholder="e.g., Detailed description of the service provided..." name="description" required>
+                    <label for="description">Description</label>
+                </div>
+
+                <!-- Subject Name
+                <div class="form-floating mb-3 my-4">
+                    <input type="text" class="form-control" id="subjectId" placeholder="" name="subjectId">
+                    <label for="subjectId">Chapter Name</label>
+                </div> -->
+
+                <!-- Subject ID -->
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="floatingSelect" name="subjectId" aria-label="Floating label select example" required>
+                      <option selected>Open this select menu</option>
+                      <option value="1">One</option>
+                      <option value="2">Two</option>
+                      <option value="3">Three</option>
+                    </select>
+                    <label for="floatingSelect">Subject</label> 
+                </div>
+
+                <!-- No. of Questions -->
+                <div class="form-floating">
+                    <input type="number" id="noOfQuestions" class="form-control" placeholder="e.g., 10" name="noOfQuestions" min="1" required>
+                    <label for="noOfQuestions">No. of Questions</label>
+                </div>
+
+
+                <!-- subject_id  Neeed to configure the subject_id
+                <div class="form-floating mb-3">
+                    <select id="subjectId" class="form-control" name="subjectId">
+                        {% for subject in subjects %}
+                            <option value="" disabled selected>Select a service type</option>
+                            <option value="1">Consulting</option>
+                            <option value="2">Development</option>
+                            <option value="design">Design</option>
+                            <option value="marketing">Marketing</option>
+                        {% endfor %}
+                    </select>
+                    <label for="serviceType">Service Type</label>
+                </div> -->
+                 
+                <div class="row justify-content-center mt-5">
+                    <div class="col-auto">
+                        <button class="btn btn-lg btn-outline-success mx-2" type="submit">Save</button>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-lg btn-outline-danger mx-2">Cancel</a>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <small class="text-body-secondary">By clicking Sign up, you agree to the terms of use.</small>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    search
+{% endblock %}
+    
+{% block content %}
+<!-- Form for search -->
+<form action="{{ url_for('search') }}" method="GET" class="d-flex justify-content-center align-items-start bg-light">
+    <div class="card p-4 shadow-lg py-0 m-4 container" style="max-width: 600px; width: 100%;">
+        <div class="card-body">
+            <div class="text-center mb-3">
+                <label for="search-by" class="form-label fw-bold fs-2">Search by: {{ current_user.__tablename__ }}</label>
+            </div>
+            <div class="input-group input-group-lg">
+                <select id="search-by" name="search_by" class="form-select" aria-placeholder="--Search by--" required>
+                    {% if current_user.__tablename__ == 'admin' %}
+                        <option value="" selected disabled>--Search by--</option>
+                        <option value="Professionals">Professionals</option>
+                        <option value="Customers">Customers</option>
+                        <option value="Services">Services</option>
+                        <option value="ServiceRequests">Service Requests</option>
+                    {% elif current_user.__tablename__ == 'professionals' %}
+                        <option value="" selected disabled>--Search by--</option>
+                        <option value="Customers">Customers</option>
+                        <option value="ServiceRequests">Service Requests</option>
+                    {% elif current_user.__tablename__ == 'customers' %}
+                        <option value="" selected disabled>--Search by--</option>
+                        <option value="Professionals">Professionals</option>
+                        <option value="Services">Services</option>
+                        <option value="ServiceRequests">Service Requests</option>
+                    {% else %}
+                        <option value="">Something went wrong</option>
+                    {% endif %}
+                </select>
+                <input type="text" name="search_text" class="form-control" placeholder="Search text" required>
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% if search_by and search_text %}
+    <div class="container mt-4">
+        <h2>{{ search_by }} ({{ search_text }})</h2>
+        <table class="table table-hover">
+            {% if results %}
+                <thead>
+                    <tr>
+                        {% for column_name in column_names %}
+                            <th scope="col" class="text-center">{{ column_name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in results %}
+                        <tr>
+                            {% for column in column_names %}
+                                <td class="text-center">
+                                    {% if search_by == "Professionals" and column == "document_path" %}
+                                        {% if item[column] %}
+                                            <a href="{{ item[column] }}" target="_blank">View Document</a>
+                                        {% else %}
+                                            No Document
+                                        {% endif %}
+                                    {% else %}
+                                        {{ item[column] }}
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            {% else %}
+                <h3>No results found.</h3>
+            {% endif %}
+        </table>
+    </div>
+{% endif %}
+{% endblock %}
