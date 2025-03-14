@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Add_Question
+{% endblock %}
+
+{% block content %}
+<div class="container col-xl-10 col-xxl-8 px-4 py-5">
+    <div class="row align-items-center g-lg-5 py-5">
+        <div class="col-md-10 mx-auto col-lg-6">
+            <form action="{{ url_for('add_question', quiz_id=quiz_id) }}" method="POST" class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
+                <h1>{{ subjetct_id }}</h1>
+                <h4 class="text-center fs-2">New Question</h4>
+
+                
+                <!-- Quiz Id -->
+                <div class="form-floating mb-3 my-4">
+                    <input type="number" class="form-control" id="name" value={{quiz_id}} placeholder="" name="quiz_id" required> 
+                    <label for="quiz_id">Quiz Id</label>
+                </div>
+
+                <!-- Chapter ID Need to configure
+                <div class="form-floating mt-5 mb-3">
+                    <select class="form-select" id="floatingSelect" name="subjectId" aria-label="Floating label select example" required>
+                        <option selected>Open this select menu</option>
+                        {% for chapter in chapters %}
+                            <option value="{{chapter.id}}">{{chapter.name}}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="floatingSelect">Chapter</label> 
+                </div>  -->
+
+                <!-- Question Title -->
+                <div class="form-floating mb-3 my-4">
+                    <input type="text" class="form-control" id="question_title" placeholder="" name="question_title" required>
+                    <label for="question_title">Question Title</label>
+                </div>
+                <!-- Subject Name
+                <div class="form-floating mb-3 my-4">
+                    <input type="text" class="form-control" id="name" placeholder="" name="name" required>
+                    <label for="name">Chapter Name</label>
+                </div> -->
+
+                <!-- Question Statement -->
+                <div class="form-floating mb-3">
+                    <input type="text" id="question_statement" class="form-control" placeholder="e.g., Detailed description of the service provided..." name="question_statement" required>
+                    <label for="question_statement">Question Statement</label>
+                </div>
+
+                <div class="container">
+                    <h4 class="text-center fs-2">Single Option Correct</h4>
+
+                                            <!-- Question Options -->
+                    <div class="form-floating mt-4 mb-3">
+                        <input type="text" id="option1" class="form-control" placeholder="e.g., Detailed description of the service provided..." name="option1" required>
+                        <label for="option1">Option 1</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="text" id="option2" class="form-control" placeholder="e.g., Detailed description of the service provided..." name="option2" required>
+                        <label for="option2">Option 2</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="text" id="option3" class="form-control" placeholder="e.g., Detailed description of the service provided..." name="option3" required>
+                        <label for="option3">Option 3</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="text" id="option4" class="form-control" placeholder="e.g., Detailed description of the service provided..." name="option4" required>
+                        <label for="option4">Option 4</label>
+                    </div>
+
+                    <div class="form-floating mt-5 mb-3">
+                        <select class="form-select" id="floatingSelect" name="correct_option" aria-label="Floating label select example" required>
+                            <option selected>Open this select menu</option>
+                            <option value=1>Option 1</option>
+                            <option value=2>Option 2</option>
+                            <option value=3>Option 3</option>
+                            <option value=4>Option 4</option>
+                        </select>
+                        <label for="floatingSelect">Correct Option</label> 
+                    </div> 
+                </div>
+                <!-- Description
+                <div class="form-floating mb-3">
+                    <input type="text" id="description" class="form-control" placeholder="e.g., Detailed description of the service provided..." name="description" required>
+                    <label for="description">Description</label>
+                </div> -->
+
+                <!-- Subject Name
+                <div class="form-floating mb-3 my-4">
+                    <input type="hidden" class="form-control" id="subjectId" placeholder="" name="subjectId">
+                    <label for="subjectId">Chapter Name</label>
+                </div> -->
+
+                <!-- Subject ID
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="floatingSelect" name="subjectId" aria-label="Floating label select example" required>
+                      <option selected>Open this select menu</option>
+                      <option value="1">One</option>
+                      <option value="2">Two</option>
+                      <option value="3">Three</option>
+                    </select>
+                    <label for="floatingSelect">Subject</label> 
+                </div> -->
+
+                <!-- No. of Questions
+                <div class="form-floating">
+                    <input type="number" id="noOfQuizes" class="form-control" placeholder="e.g., 10" name="noOfQuizes" min="1" required>
+                    <label for="noOfQuizes">No. of Questions</label>
+                </div> -->
+
+
+                <!-- subject_id  Neeed to configure the subject_id
+                <div class="form-floating mb-3">
+                    <select id="subjectId" class="form-control" name="subjectId">
+                        {% for subject in subjects %}
+                            <option value="" disabled selected>Select a service type</option>
+                            <option value="1">Consulting</option>
+                            <option value="2">Development</option>
+                            <option value="design">Design</option>
+                            <option value="marketing">Marketing</option>
+                        {% endfor %}
+                    </select>
+                    <label for="serviceType">Service Type</label>
+                </div> -->
+                 
+                <div class="row justify-content-center mt-5">
+                    <div class="col-auto">
+                        <button class="btn btn-lg btn-outline-success mx-2" type="submit">Save</button>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-lg btn-outline-danger mx-2">Cancel</a>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <small class="text-body-secondary">By clicking Sign up, you agree to the terms of use.</small>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -13,12 +13,43 @@ from sqlalchemy import or_, and_, func
 from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import jsonify
+
 
 # Testing
-@app.route('/create_quiz/<int:chapter_id>')
-def create_quiz(chapter_id=None):
-    # Your logic here
-    return render_template('quiz_management.html')
+@app.route('/test/<int:quiz_id>', methods=['GET', 'POST'])
+def add_question(quiz_id):
+    print("Got Quiz ID in add_question: ", quiz_id) #Debug
+    if request.method == 'POST':
+        quiz_id = request.form.get('quiz_id')
+        question_title = request.form.get('question_title')
+        question_statement = request.form.get('question_statement')
+        option1 = request.form.get('option1')
+        option2 = request.form.get('option2')
+        option3 = request.form.get('option3')
+        option4 = request.form.get('option4')
+        correct_option = request.form.get('correct_option')
+
+        new_question = Question(
+            quiz_id=quiz_id,
+            question_title=question_title,
+            question_statement=question_statement,
+            option1=option1,
+            option2=option2,
+            option3=option3,
+            option4=option4,
+            correct_option=correct_option
+        )
+        try:
+            db.session.add(new_question)
+            db.session.commit()
+            flash("Question added successfully!", "success")
+        except Exception as e:
+            flash(f"An error occurred: {str(e)}", "danger")
+    subject_id = Quiz.query.filter_by(id=quiz_id).first().subject_id
+    print("Subject ID: ", subject_id) #Debug
+    chapters=Chapter.query.filter_by(subject_id=subject_id).all()
+    return render_template('add_question.html', chapters=chapters, quiz_id=quiz_id)
 
 @app.route('/')
 @app.route('/home')
@@ -30,7 +61,7 @@ def home():
 def login():
     if request.method == 'POST':
         email = request.form.get('email')
-        print(f"Email: {email}, Type: {type(email)}")
+        print(f"Email: {email}, Type: {type(email)}") #Debug
         password = request.form.get('password')
 
         # if email==session.get('deleted email'):
@@ -38,10 +69,7 @@ def login():
         #     return redirect(request.url)
         # # if user is Admin
         admin = Admin.query.filter_by(email=email).first()
-        print(Admin.query.filter_by(email=email).first())
-        # print(f"Admin: {admin}, Email={email}")
-        # print(f"Boolean_Email: {validate_email(email)}")
-        # print(f"Boolean_Password: {check_password_hash(admin.password, password)}")
+        # print(Admin.query.filter_by(email=email).first())
         if admin and check_password_hash(admin.password, password) and validate_email(email):
             # user_id = f"admin-{admin.id}"
             login_user(admin)
@@ -154,6 +182,8 @@ def signup():
 
 
                             # Admin Action
+
+
 @login_required                   
 @app.route('/admin/add_subject', methods=['GET', 'POST'])
 def add_subject():
@@ -197,11 +227,15 @@ def add_subject():
     return render_template('add_subject.html')
 
 @login_required                   
-@app.route('/admin/add_quiz', methods=['GET', 'POST'])
-def add_quiz():
+@app.route('/admin/add_quiz/<int:chapter_id>/<int:subject_id>', methods=['GET', 'POST'])
+def add_quiz(chapter_id=None, subject_id=None):
+    print("Got Chapter ID: ", chapter_id) #Debug
+    print("Got Subject ID: ", subject_id) #Debug
+    chapter = Chapter.query.filter_by(id=chapter_id).first()
     if request.method == 'POST':
         # Extract data from the form
-        chapter_id = int(request.form.get('chapterId'))
+        # chapter_id = int(request.form.get('chapterId'))
+        # subject_id = int(request.form.get('subjectId'))
         date_of_quiz = request.form.get('dateOfQuiz')
         time_duration = request.form.get('timeDuration')
 
@@ -210,6 +244,7 @@ def add_quiz():
             chapter_id=chapter_id,
             date_of_quiz=date_of_quiz,
             time_duration=time_duration,
+            subject_id=subject_id
             # no_of_questions=no_of_questions,
             # remarks=remarks
         )
@@ -237,27 +272,39 @@ def add_quiz():
             flash(f"An unexpected error occurred: {str(e)}", "danger")
             # return redirect(request.url)
 
-    return render_template('add_quiz.html')
+    return render_template('add_quiz.html', subjects=Subject.query.all(), chap_id=chapter_id, chap=chapter, sub_id=subject_id)
+
+
+@app.route('/get_chapters/<int:subject_id>')
+def get_chapters(subject_id):
+    # Query chapters belonging to the selected subject
+    chapters = Chapter.query.filter_by(subject_id=subject_id).all()
+    
+    # Convert to JSON format
+    chapters_data = [{"id": chapter.id, "name": chapter.name} for chapter in chapters]
+    
+    return jsonify({"chapters": chapters_data})
 
 @app.route('/admin/quiz_management')
 @login_required
 def quiz_management():
-    return render_template('quiz_management.html', quizes=Quiz.query.all())
+    quizes = Quiz.query.all()
+    return render_template('quiz_management.html', quizes=quizes)
 
+@app.route('/admin/add_chapter/<int:subject_id>', methods=['GET', 'POST'])
 @login_required                   
-@app.route('/admin/add_chapter', methods=['GET', 'POST'])
-def add_chapter():
+def add_chapter(subject_id=None):
+    print("Got Subject ID: ", subject_id) #Debug 
+    # subject_id = Subject.query.filter_by(id=subject_id).first()
     if request.method == 'POST':
         name = request.form.get('name')
-        no_of_quizes = request.form.get('noOfQuizes')
         description = request.form.get('description')
-        subject_id = int(request.form.get('subjectId'))
-        print(f"Subject ID: {subject_id}")
+
 
         new_chapter = Chapter(
             name=name,
-            no_of_quizes=no_of_quizes,
             description=description,
+            no_of_quizes=0,  # Initialize with 0 quizzes
             subject_id=subject_id
         )
         try:
@@ -272,12 +319,17 @@ def add_chapter():
             else:
                 flash(f"Database error: {str(e)}", "danger")  # General error message
             return redirect(url_for('add_chapter'))
-    return render_template('add_chapter.html')
+    return render_template('add_chapter.html', sub_id=subject_id)
+
+# @login_required                   
+# @app.route('/admin/add_question', methods=['GET', 'POST'])
+# def add_question():
+#     return render_template('add_question.html')
 
 
 @app.route('/dashboard')
 @login_required
-def dashboard(chapter_id=None): 
+def dashboard(): 
     
     # if role == 'admin':
     if isinstance(current_user, Admin):
@@ -290,7 +342,7 @@ def dashboard(chapter_id=None):
     
     # if role == 'customer':
     if isinstance(current_user, User):
-        quizes = Question.query.filter_by(chapter_id=chapter_id).all()
+        quizes = Quiz.query.all()
         # services = Service.query.all()
         # customer=Customer.query.filter_by(id=user_id).first()
         # available_services = (
@@ -303,6 +355,15 @@ def dashboard(chapter_id=None):
         return render_template('student_dashboard.html', quizes=quizes)
     
     return render_template('dashboard.html')
+
+# User Interactions
+@app.route('/student/view_details<int:quiz_id>', methods=['GET', 'POST'])
+def view_quiz(quiz_id):
+    if request.method=='POST':
+        print('Post Method invoked')
+    quiz = Quiz.query.filter_by(id=quiz_id).first()
+    return render_template('quiz_details.html', quiz=quiz)
+
 
 @app.route('/logout')
 @login_required

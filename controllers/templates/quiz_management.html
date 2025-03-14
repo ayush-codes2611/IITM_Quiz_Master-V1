@@ -44,8 +44,8 @@
 
 <div class="container mt-4">
     <div class="row g-4 d-flex justify-content-center">
-        {% if subjects %}
-            {% for subject in subjects %}
+        {% if quizes %}
+            {% for quiz in quizes %}
                 <!-- Card 1 -->
                 <div class="col-md-4">
                     <div class="card p-3 shadow">
@@ -54,21 +54,21 @@
                             <span class="video-time">10:45</span>
                         </div> -->
                         <div class="card-body">
-                            <h6 class="fw-bold">{{ subject.name }}</h6>
-                            <table class="table table-hover shadow rounded"> 
-                                {% if subject.chapters %}
+                            <h4 class="fw-bold text-center"><a href="#">Quiz{{ quiz.id }}({{quiz.chapter.name}})</a></h4>
+                            <table class="table table-hover shadow"> 
+                                {% if quiz.questions %}
                                     <thead>
                                         <tr>
-                                            <th scope="col" class="text-center border-end">Chapter Name</th>
-                                            <th scope="col" class="text-center border-end">Questions</th>
+                                            <th scope="col" class="text-center border-end">Id</th>
+                                            <th scope="col" class="text-center border-end">Q_Title</th>
                                             <th scope="col" class="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for chapter in subject.chapters %}
+                                        {% for question in quiz.questions %}
                                             <tr>
-                                                <td class="text-center">{{ chapter.name }}</td>
-                                                <td class="text-center">{{ chapter.no_of_questions }}</td>
+                                                <td class="text-center">{{ question.id }}</td>
+                                                <td class="text-center">{{ question.question_title }}</td>
                                                 <td class="text-center">
                                                     <div class="d-flex justify-content-center gap-2">
                                                         <a href="#" class="btn btn-outline-primary btn-sm">Edit</a>
@@ -88,7 +88,7 @@
                             </table>
                             <div class="row mt-3">
                                 <div class="col text-end mt-3"> 
-                                    <a href="{{url_for('add_chapter')}}" class="btn btn-outline-success">+ Chapter</a>
+                                    <a href="{{url_for('add_question', quiz_id=quiz.id)}}" class="btn btn-outline-success">+ Questions</a>
                                 </div>    
                             </div>
                         </div>
@@ -96,13 +96,13 @@
                 </div>
             {% endfor %}
         {% else %}
-            <div class="container"><h3 style="color: #808080;">Oops! Seems like no Subjects is available. Consider creating one.</h3></div>
+            <div class="container"><h3 style="color: #808080;">No Quizes! Consider creating one.</h3></div>
         {% endif %}
     </div>
 </div>
 <div class="row mt-3">
     <div class="col text-center mt-3"> 
-        <a href="{{url_for('add_quiz')}}" class="btn btn-outline-success btn-lg">+ New Quiz</a>
+        <a href="#" class="btn btn-outline-success btn-lg">+ New Quiz</a>
     </div>    
 </div>
 

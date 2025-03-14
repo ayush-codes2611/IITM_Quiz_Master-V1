@@ -8,8 +8,8 @@
 <div class="container col-xl-10 col-xxl-8 px-4 py-5">
     <div class="row align-items-center g-lg-5 py-5">
         <div class="col-md-10 mx-auto col-lg-5">
-            <form action="{{url_for('add_quiz', chapter_id=chap_id, subject_id=sub_id)}}" method="POST" class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
-                <h4 class="text-center fs-2">New Quiz</h4>
+            <form action="{{url_for('view_quiz', quiz_id=quiz.id)}}" method="POST" class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
+                <h4 class="text-center fs-2">Quiz Details</h4>
 
                 <!-- Subject Dropdown
                 <div class="form-floating mt-5 mb-3">
@@ -22,11 +22,29 @@
                     <label for="subjectSelect">Subject</label>
                 </div> -->
 
-                <!-- SubjectId
+                <!-- SubjectId -->
                 <div class="form-floating mb-3">
-                    <input type="Number" id="subjectId" class="form-control" value="" placeholder="" name="subjectId" disabled>
-                    <label for="subjectId">Subject ID</i></label>
-                </div> -->
+                    <input type="Number" id="quizId" class="form-control" value="{{quiz.id}}" placeholder="" name="quizId" readonly>
+                    <label for="quizId">Quiz Id</i></label>
+                </div>
+
+                <!-- Subject Name -->
+                <div class="form-floating mb-3 my-4">
+                    <input type="text" class="form-control" value={{quiz.subject.name}} id="subjectName" placeholder="" name="subjectName" readonly>
+                    <label for="subjectName">Subject Name</label>
+                </div>
+                
+                <!-- Chapter Name -->
+                <div class="form-floating mb-3 my-4">
+                    <input type="text" class="form-control" value={{quiz.chapter.name}} id="chapterName" placeholder="" name="chapterName" readonly>
+                    <label for="chapterName">Chapter Name</label>
+                </div>
+
+                <!-- No. of  Questions -->
+                <div class="form-floating mb-3">
+                    <input type="text" id="#questions" class="form-control" value="{{quiz.no_of_questions}}" placeholder="" name="#questions" readonly>
+                    <label for="#questions">Number of Questions</i></label>
+                </div>
 
                 <!-- Chapter Dropdown
                 <div class="form-floating mb-3">
@@ -36,31 +54,19 @@
                     <label for="chapterSelect">Chapter</label> 
                 </div> -->
 
-                <!-- ChapterId -->
-                <div class="form-floating mb-3">
-                    <input type="Number" id="chapterId" class="form-control" value={{chap_id}} placeholder="" name="chapterId" disabled>
-                    <label for="chapterId">Chapter ID</i></label>
-                </div>
-
-
-
                 <!-- Quiz Date -->
                 <div class="form-floating mb-3 my-4">
-                    <input type="date" class="form-control" id="floatingDOB" name="dob" required>
-                    <label for="floatingDOB">Quiz Date</label>
+                    <input class="form-control" value="{{quiz.formatted_date}}" id="examDate" name="examDate" readonly>
+                    <label for="examDate">Scheduled Date</label>
                 </div>
 
                  <!-- timeDuration -->
                 <div class="form-floating mb-3">
-                    <input type="time" id="timeDuration" class="form-control" placeholder="" name="timeDuration">
+                    <input type="text" id="timeDuration" class="form-control" value="{{quiz.time_duration}}" placeholder="" name="timeDuration" readonly>
                     <label for="timeDuration">Exam Duration<i>(in hrs)</i></label>
                 </div>
 
-                <!-- Subject Name
-                <div class="form-floating mb-3 my-4">
-                    <input type="text" class="form-control" id="subjectId" placeholder="" name="subjectId">
-                    <label for="subjectId">Chapter Name</label>
-                </div> -->
+                
 
                 
 
@@ -87,10 +93,7 @@
                  
                 <div class="row justify-content-center mt-5">
                     <div class="col-auto">
-                        <button class="btn btn-lg btn-outline-success mx-2" type="submit">Save</button>
-                    </div>
-                    <div class="col-auto">
-                        <a href="{{ url_for('dashboard') }}" class="btn btn-lg btn-outline-danger mx-2">Cancel</a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-lg btn-outline-danger mx-2">Close</a>
                     </div>
                 </div>
 

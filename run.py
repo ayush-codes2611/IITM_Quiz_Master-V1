@@ -10,7 +10,7 @@ if __name__ == "__main__":
         # db.session.commit()
 
         # admin1=Admin(email='Ay@admin.com', password=generate_password_hash('123456'))
-        # quiz1=Quiz(chapter_id=1, date_of_quiz=word=, time_duration='01:00')
+        # # quiz1=Quiz(chapter_id=1, date_of_quiz=word=, time_duration='01:00')
         # db.session.add(admin1)
         # db.session.commit()
         # professionals = Professional.query.all()

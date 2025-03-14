@@ -68,27 +68,33 @@ class Chapter(db.Model):
 class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     chapter_id = db.Column(db.Integer, db.ForeignKey('chapter.id'), nullable=False)
+    subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
     date_of_quiz = db.Column(db.DateTime, default=datetime.utcnow)
     time_duration = db.Column(db.String(10))  # HH:MM format
-    no_of_questions = db.Column(db.Integer) # I don't know how to use this stuff.
+    no_of_questions = db.Column(db.Integer) # Need some work
     remarks = db.Column(db.Text)
     questions = db.relationship('Question', backref='quiz', cascade='all, delete-orphan')
-    scores = db.relationship('Score', backref='quiz', cascade='all, delete-orphan')
+    scores = db.relationship('Score', backref='quiz', cascade='all, delete-orphan')    
+    subject = db.relationship('Subject', backref='quizzes')
     
     # Dynamically count the number of related questions
     @hybrid_property
     def no_of_questions(self):
         return len(self.questions)
     
+    @hybrid_property
+    def formatted_date(self):
+        return self.date_of_quiz.strftime("%d/%m/%Y") if self.date_of_quiz else None
 # Question model
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
+    question_title = db.Column(db.String(30), nullable=False)
     question_statement = db.Column(db.Text, nullable=False)
     option1 = db.Column(db.String(255), nullable=False)
     option2 = db.Column(db.String(255), nullable=False)
-    option3 = db.Column(db.String(255))
-    option4 = db.Column(db.String(255))
+    option3 = db.Column(db.String(255), nullable=False)
+    option4 = db.Column(db.String(255), nullable=False)
     correct_option = db.Column(db.Integer, nullable=False)  # Stores option number (1-4)
 
 # Score model

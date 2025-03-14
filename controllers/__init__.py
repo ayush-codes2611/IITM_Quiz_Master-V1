@@ -4,6 +4,7 @@ from flask_login import LoginManager
 import os
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
+from flask_migrate import Migrate
 
 # Initialize app and db
 app = Flask(__name__)
@@ -14,7 +15,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'ap
 app.config['SECRET_KEY'] = '7564da6b69a5f4a73c57fd45' # Required for session management
 
 db = SQLAlchemy(app)  # Initialize SQLAlchemy with the app
-# migrate = Migrate(app, db)
+migrate = Migrate(app, db)
 
 # # Enable foreign key support for SQLite
 # @app.before_request

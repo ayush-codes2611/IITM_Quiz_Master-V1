@@ -8,7 +8,8 @@
 <div class="container col-xl-10 col-xxl-8 px-4 py-5">
     <div class="row align-items-center g-lg-5 py-5">
         <div class="col-md-10 mx-auto col-lg-5">
-            <form action="/admin/add_chapter" method="POST" class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
+            <form action="{{ url_for('add_chapter', subject_id=sub_id) }}" method="POST" class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
+                <h1>{{ subjetct_id }}</h1>
                 <h4 class="text-center fs-2">New Chapter</h4>
                 <!-- Subject Name -->
                 <div class="form-floating mb-3 my-4">
@@ -24,11 +25,11 @@
 
                 <!-- Subject Name
                 <div class="form-floating mb-3 my-4">
-                    <input type="text" class="form-control" id="subjectId" placeholder="" name="subjectId">
+                    <input type="hidden" class="form-control" id="subjectId" placeholder="" name="subjectId">
                     <label for="subjectId">Chapter Name</label>
                 </div> -->
 
-                <!-- Subject ID -->
+                <!-- Subject ID
                 <div class="form-floating mb-3">
                     <select class="form-select" id="floatingSelect" name="subjectId" aria-label="Floating label select example" required>
                       <option selected>Open this select menu</option>
@@ -37,13 +38,13 @@
                       <option value="3">Three</option>
                     </select>
                     <label for="floatingSelect">Subject</label> 
-                </div>
+                </div> -->
 
-                <!-- No. of Questions -->
+                <!-- No. of Questions
                 <div class="form-floating">
                     <input type="number" id="noOfQuizes" class="form-control" placeholder="e.g., 10" name="noOfQuizes" min="1" required>
                     <label for="noOfQuizes">No. of Questions</label>
-                </div>
+                </div> -->
 
 
                 <!-- subject_id  Neeed to configure the subject_id

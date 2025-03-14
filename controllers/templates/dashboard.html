@@ -47,7 +47,7 @@
                             <img src="https://images.pexels.com/photos/31115182/pexels-photo-31115182/free-photo-of-student-taking-exam-in-classroom-setting.jpeg?auto=compress&cs=tinysrgb&w=600" class="card-img-top" alt="Quiz Image">
                         </div>
                         <div class="card-body">
-                            <h6 class="fw-bold">{{ subject.name }}</h6>
+                            <h4 class="fw-bold text-center">{{ subject.name }}</h4>
                             <table class="table table-hover shadow rounded"> 
                                 {% if subject.chapters %}
                                     <thead>
@@ -60,9 +60,8 @@
                                     <tbody>
                                         {% for chapter in subject.chapters %}
                                             <tr>
-                                                <a href="{{ url_for('create_quiz', chapter_id=chapter.id) }}">
-                                                    <td class="text-center">{{ chapter.name }}</td>
-                                                </a>
+                                                <td class="text-center">
+                                                        <a href="{{ url_for('add_quiz', chapter_id=chapter.id, subject_id=chapter.subject.id) }}">{{ chapter.name }}</td></a>
                                                 <td class="text-center">{{ chapter.no_of_quizes }}</td>
                                                 <td class="text-center">
                                                     <div class="d-flex justify-content-center gap-2">
@@ -82,8 +81,8 @@
                                 {% endif %}
                             </table>
                             <div class="row mt-3">
-                                <div class="col text-end mt-3"> 
-                                    <a href="{{url_for('add_chapter')}}" class="btn btn-outline-success">+ Chapter</a>
+                                <div class="col text-end mt-3">
+                                    <a href="{{ url_for('add_chapter', subject_id=subject.id) }}" class="btn btn-outline-success">+ Chapter</a>
                                 </div>    
                             </div>
                         </div>
@@ -93,34 +92,6 @@
         {% else %}
             <div class="container"><h3 style="color: #808080;">Oops! Seems like no Subjects is available. Consider creating one.</h3></div>
         {% endif %}
-        <!-- Card 2 -->
-        <div class="col-md-4">
-            <div class="card p-3 shadow">
-                <div class="position-relative">
-                    <img src="https://images.pexels.com/photos/31115182/pexels-photo-31115182/free-photo-of-student-taking-exam-in-classroom-setting.jpeg?auto=compress&cs=tinysrgb&w=600" class="card-img-top" alt="Quiz Image">
-                    <span class="video-time">12:30</span>
-                </div>
-                <div class="card-body">
-                    <h6 class="fw-bold">Quiz: Science & Technology</h6>
-                    <p class="text-muted small">Quiz Master</p>
-                    <p class="text-muted small">300K views • 1 month ago</p>
-                </div>
-            </div>
-        </div>
-        <!-- Card 3 -->
-        <div class="col-md-4">
-            <div class="card p-3 shadow">
-                <div class="position-relative">
-                    <img src="https://images.pexels.com/photos/31115182/pexels-photo-31115182/free-photo-of-student-taking-exam-in-classroom-setting.jpeg?auto=compress&cs=tinysrgb&w=600" class="card-img-top" alt="Quiz Image">
-                    <span class="video-time">08:20</span>
-                </div>
-                <div class="card-body">
-                    <h6 class="fw-bold">Quiz: History & Culture</h6>
-                    <p class="text-muted small">Quiz Master</p>
-                    <p class="text-muted small">750K views • 3 weeks ago</p>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 <div class="row mt-3">
