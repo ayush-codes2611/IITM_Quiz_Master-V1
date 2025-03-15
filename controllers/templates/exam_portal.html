@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Exam_Portal
+{% endblock %}
+
+{% block content %}
+<div class="container col-xl-10 col-xxl-8 px-4 py-5">
+    <div class="row align-items-center g-lg-5 py-5">
+        <div class="col-md-10 mx-auto col-lg-8">
+            <div class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <!-- Hidden div to store quiz duration from Flask -->
+                    <div class="fw-bold text-primary">QNo. <span class="badge bg-success">3/{{quiz.no_of_questions}}</span></div>
+                    <div id="quiz-data" data-duration="{{ quiz_duration }}"></div>
+                    <div class="badge bg-info text-dark fs-6 px-3 py-2" id="timer">00:00:00</div>
+                </div>
+
+                <div class="border rounded p-3 bg-light mb-4">
+                    <h4 class="text-center"></h4>
+                </div>
+
+                <form id="quiz-form" method="POST" action="{{ url_for('submit_quiz') }}">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="option" id="option1">
+                        <label class="form-check-label" for="option1">1) Option...</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="option" id="option2">
+                        <label class="form-check-label" for="option2">2) Option...</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="option" id="option3" checked>
+                        <label class="form-check-label" for="option3">3) Option...</label>
+                    </div>
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="radio" name="option" id="option4">
+                        <label class="form-check-label" for="option4">4) Option...</label>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-primary">Save and Next</button>
+                        <button type="submit" class="btn btn-success">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const quizDuration = parseInt(document.getElementById('quiz-data').getAttribute('data-duration'), 10);
+        const timerElement = document.getElementById('timer');
+        const quizForm = document.getElementById('quiz-form');
+
+        // Check if quiz start time is stored in localStorage
+        let startTime = localStorage.getItem('quiz_start_time');
+
+        if (!startTime) {
+            // Store the current timestamp as the quiz start time
+            startTime = Date.now();
+            localStorage.setItem('quiz_start_time', startTime);
+        } else {
+            startTime = parseInt(startTime, 10);
+        }
+
+        function updateTimer() {
+            const currentTime = Date.now();
+            const elapsedTime = Math.floor((currentTime - startTime) / 1000);
+            const timeLeft = Math.max(quizDuration - elapsedTime, 0);
+
+            const hours = Math.floor(timeLeft / 3600);
+            const minutes = Math.floor((timeLeft % 3600) / 60);
+            const seconds = timeLeft % 60;
+
+            timerElement.innerText = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                localStorage.removeItem('quiz_start_time'); // Clear stored time
+                
+                // Show alert only when the timer reaches 0
+                alert('Time is up! Your quiz is being submitted.');
+                quizForm.submit(); // Auto-submit quiz
+            }
+        }
+
+        // Update the timer every second
+        const timerInterval = setInterval(updateTimer, 1000);
+        updateTimer(); // Run immediately to prevent 1s delay
+    });
+</script>
+
+{% endblock %}

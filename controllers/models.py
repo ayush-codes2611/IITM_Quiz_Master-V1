@@ -33,6 +33,7 @@ class Admin(db.Model, UserMixin):
     
 # User model
 class User(db.Model, UserMixin):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     fullname = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
@@ -71,7 +72,7 @@ class Quiz(db.Model):
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
     date_of_quiz = db.Column(db.DateTime, default=datetime.utcnow)
     time_duration = db.Column(db.String(10))  # HH:MM format
-    no_of_questions = db.Column(db.Integer) # Need some work
+    # no_of_questions = db.Column(db.Integer) # Need some work
     remarks = db.Column(db.Text)
     questions = db.relationship('Question', backref='quiz', cascade='all, delete-orphan')
     scores = db.relationship('Score', backref='quiz', cascade='all, delete-orphan')    

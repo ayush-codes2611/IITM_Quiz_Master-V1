@@ -17,7 +17,7 @@ from flask import jsonify
 
 
 # Testing
-@app.route('/test/<int:quiz_id>', methods=['GET', 'POST'])
+@app.route('/add_question/<int:quiz_id>', methods=['GET', 'POST'])
 def add_question(quiz_id):
     print("Got Quiz ID in add_question: ", quiz_id) #Debug
     if request.method == 'POST':
@@ -356,13 +356,47 @@ def dashboard():
     
     return render_template('dashboard.html')
 
-# User Interactions
+# Student Interactions
 @app.route('/student/view_details<int:quiz_id>', methods=['GET', 'POST'])
 def view_quiz(quiz_id):
     if request.method=='POST':
         print('Post Method invoked')
     quiz = Quiz.query.filter_by(id=quiz_id).first()
     return render_template('quiz_details.html', quiz=quiz)
+
+@app.route('/test/<int:quiz_id>')
+def exam_portal(quiz_id):
+    quiz = Quiz.query.filter_by(id=quiz_id).first()
+    # print(f"Got Time: {quiz.time_duration}", type({quiz.time_duration})) #Debug
+    if isinstance(quiz.time_duration, set):
+        quiz.time_duration = list(quiz.time_duration)[0] #extract the time in the str format
+    hrs, mins = map(int, quiz.time_duration.split(":"))
+    print(f"Quiz time duration: {quiz.time_duration}", type(quiz.time_duration))
+    total_secs = (hrs * 3600) + (mins * 60)
+    # print(f"Converted Time Duration: {total_secs} seconds")  # Debug
+
+    questions = quiz.questions
+    print(questions)
+    return render_template('exam_portal.html', quiz=quiz, quiz_duration=total_secs, questions=quiz.questions)
+
+@app.route('/submit_quiz', methods=['POST'])
+@login_required  # Ensure only logged-in users can submit quizzes
+def submit_quiz():
+    if request.method == 'POST':
+        # Extract the user's selected option (if any)
+        selected_option = request.form.get('option')
+
+        # Save the score or answers in the database
+        score = Score(user_id=current_user.id, quiz_id=session.get('quiz_id'), selected_option=selected_option)
+        db.session.add(score)
+        db.session.commit()
+
+        flash("Quiz submitted successfully!", "success")
+        return redirect(url_for('dashboard'))  # Redirect to the user's dashboard after submission
+
+    flash("Invalid quiz submission!", "danger")
+    return redirect(url_for('exam_portal'))  # Redirect back to quiz page in case of an issue
+
 
 
 @app.route('/logout')
