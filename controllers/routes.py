@@ -364,6 +364,9 @@ def view_quiz(quiz_id):
     quiz = Quiz.query.filter_by(id=quiz_id).first()
     return render_template('quiz_details.html', quiz=quiz)
 
+
+
+
 @app.route('/test/<int:quiz_id>')
 def exam_portal(quiz_id):
     quiz = Quiz.query.filter_by(id=quiz_id).first()
@@ -376,8 +379,12 @@ def exam_portal(quiz_id):
     # print(f"Converted Time Duration: {total_secs} seconds")  # Debug
 
     questions = quiz.questions
+    current_question_index = 1  # Start with the first question
     print(questions)
-    return render_template('exam_portal.html', quiz=quiz, quiz_duration=total_secs, questions=quiz.questions)
+    return render_template('exam_portal.html', quiz=quiz, quiz_duration=total_secs, questions=quiz.questions, current_question_index=current_question_index)
+
+
+
 
 @app.route('/submit_quiz', methods=['POST'])
 @login_required  # Ensure only logged-in users can submit quizzes
