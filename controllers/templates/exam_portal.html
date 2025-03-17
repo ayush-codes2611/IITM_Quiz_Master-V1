@@ -1,97 +1,159 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Exam_Portal
+    Exam Portal
+{% endblock %}
+
+{% block styles %}
+    <style>
+        .fixed-nav {
+            position: fixed;
+            top: 80px; /* Adjust this value to control the distance from the top */
+            left: 20px; /* Adjust this value to control the distance from the left */
+            width: 20%; /* Adjust this value to match the width of your left panel */
+            height: 100vh; /* Make it take the full height of the viewport */
+            overflow-y: auto; /* Add scroll if content overflows */
+            z-index: 1000; /* Ensure it stays on top of other content */
+        }
+
+        /* Adjust the right panel to account for the fixed left panel */
+        .col-md-9 {
+            margin-left: 20%; /* Adjust this value to match the width of your left panel */
+        }
+    </style>  
 {% endblock %}
 
 {% block content %}
-<div class="container col-xl-10 col-xxl-8 px-4 py-5">
-    <div class="row align-items-center g-lg-5 py-5">
-        <div class="col-md-10 mx-auto col-lg-8">
-            <div class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <!-- Hidden div to store quiz duration from Flask -->
-                    <div class="fw-bold text-primary">
-                        QNo. <span class="badge bg-success" id="current-question">{{ current_question_index }}/{{quiz.no_of_questions}}</span>
-                    </div>
-                    <div id="quiz-data" data-duration="{{ quiz_duration }}"></div>
-                    <div class="badge bg-info text-dark fs-6 px-3 py-2" id="timer">00:00:00</div>
-                </div>
-
-                <div class="border rounded p-3 bg-light mb-4">
-                    <h4 class="text-center"></h4>
-                </div>
-
-                <form id="quiz-form" method="POST" action="{{ url_for('submit_quiz') }}">
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="option" id="option1">
-                        <label class="form-check-label" for="option1">1) Option...</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="option" id="option2">
-                        <label class="form-check-label" for="option2">2) Option...</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="option" id="option3" checked>
-                        <label class="form-check-label" for="option3">3) Option...</label>
-                    </div>
-                    <div class="form-check mb-4">
-                        <input class="form-check-input" type="radio" name="option" id="option4">
-                        <label class="form-check-label" for="option4">4) Option...</label>
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-primary">Save and Next</button>
-                        <button type="submit" class="btn btn-success">Submit</button>
-                    </div>
-                </form>
+<div class="container py-4">
+    <div class="row">
+        <!-- Left Panel: Question Navigation & Timer -->
+        <div class="col-md-3 bg-white p-3 fixed-nav">
+            <h5 class="me-5">Exam:</h5>
+            <p>{{ quiz.subject.name }} - chapter({{ quiz.chapter_id }})</p>
+            <h6>Total Marks: {{ quiz.no_of_questions * 1 }}</h6>
+            <hr>
+            
+            <h5>Question Menu</h5>
+            <div class="d-flex flex-wrap">
+                {% for i in range(quiz.no_of_questions) %}
+                    <button class="btn btn-sm btn-outline-primary m-1 question-nav" data-target="#question-{{ loop.index }}">{{ loop.index }}</button>
+                {% endfor %}
             </div>
+            <hr>
+            
+            <h5>Timer</h5>
+            <div id="timer" class="fs-4">00:00:00</div>
+            <hr>
+            
+            <button class="btn btn-success w-100" id="submitExam">Submit Exam</button>
+        </div>
+
+        <!-- Right Panel: All Questions Displayed -->
+        <div class="col-md-9">
+            {% for question in questions %}
+            <div id="question-{{ loop.index }}" class="question-section py-3" data-question-id="{{ question.id }}">
+                <h4>Question {{ loop.index }}</h4>
+                <p>{{ question.question_statement }}</p>
+                <div>
+                    {% for i in range(1, 5) %}
+                    <div class='form-check'>
+                        <input class='form-check-input' type='radio' name='answer-{{ question.id }}' id='option{{ i }}-{{ question.id }}' value='{{ i }}'>
+                        <label class='form-check-label' for='option{{ i }}-{{ question.id }}'> {{ question['option' ~ i] }} </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <hr>
+            {% endfor %}
         </div>
     </div>
 </div>
 
+
+
+<!-- scripts -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const quizDuration = parseInt(document.getElementById('quiz-data').getAttribute('data-duration'), 10);
         const timerElement = document.getElementById('timer');
-        const quizForm = document.getElementById('quiz-form');
+        const quizDuration = Number('{{ quiz_duration }}');
 
-        // Check if quiz start time is stored in localStorage
-        let startTime = localStorage.getItem('quiz_start_time');
-
-        if (!startTime) {
-            // Store the current timestamp as the quiz start time
-            startTime = Date.now();
-            localStorage.setItem('quiz_start_time', startTime);
-        } else {
-            startTime = parseInt(startTime, 10);
-        }
+        // ❗ Reset Timer for a Fresh Attempt
+        localStorage.removeItem('quiz_start_time');
+        let startTime = Date.now();
+        localStorage.setItem('quiz_start_time', startTime);
 
         function updateTimer() {
-            const currentTime = Date.now();
-            const elapsedTime = Math.floor((currentTime - startTime) / 1000);
+            const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
             const timeLeft = Math.max(quizDuration - elapsedTime, 0);
-
             const hours = Math.floor(timeLeft / 3600);
             const minutes = Math.floor((timeLeft % 3600) / 60);
             const seconds = timeLeft % 60;
-
-            timerElement.innerText = 
-                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            timerElement.innerText = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                localStorage.removeItem('quiz_start_time'); // Clear stored time
-                
-                // Show alert only when the timer reaches 0
                 alert('Time is up! Your quiz is being submitted.');
-                quizForm.submit(); // Auto-submit quiz
+                document.getElementById("submitExam").click();
             }
         }
 
-        // Update the timer every second
         const timerInterval = setInterval(updateTimer, 1000);
-        updateTimer(); // Run immediately to prevent 1s delay
+        updateTimer();
+
+        // Smooth scrolling to the selected question
+        document.querySelectorAll('.question-nav').forEach(button => {
+            button.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Submit quiz with confirmation alert
+        document.getElementById("submitExam").addEventListener("click", function (event) {
+            event.preventDefault(); // Prevent accidental submission
+
+            // Confirmation Alert Before Submission
+            if (!confirm("Are you sure you want to submit the quiz?")) {
+                return; // If the user cancels, stop execution
+            }
+
+            let answers = [];
+            let userId = "{{ current_user.id }}";  
+            let subjectId = "{{ quiz.subject_id }}";  
+            let chapterId = "{{ quiz.chapter_id }}";  
+            let quizId = "{{ quiz.id }}";  
+
+            document.querySelectorAll(".question-section").forEach((questionSection) => {
+                let questionId = questionSection.getAttribute("data-question-id");
+                let attemptedOption = document.querySelector(`input[name="answer-${questionId}"]:checked`);
+
+                answers.push({
+                    "question_id": questionId,
+                    "attempted_option": attemptedOption ? attemptedOption.value : null,
+                });
+            });
+
+            // Send JSON to Flask backend
+            fetch("{{ url_for('submit_quiz') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: userId,
+                    subject_id: subjectId,
+                    chapter_id: chapterId,
+                    quiz_id: quizId,
+                    answers: answers
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Quiz Submitted! Your Score: " + data.score);
+                window.location.href = "{{ url_for('dashboard') }}";
+            });
+        });
     });
 </script>
 

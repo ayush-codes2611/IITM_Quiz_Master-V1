@@ -6,7 +6,7 @@ from email_validator import validate_email
 from flask import render_template, session, request, flash, redirect, url_for, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
 from controllers import app, db
-from controllers.models import Admin, User, Subject, Chapter,  Question, Score, Quiz
+from controllers.models import Admin, User, Subject, Chapter,  Question, Score, Quiz, UserAnswer
 import os
 import matplotlib.pyplot as plt
 from sqlalchemy import or_, and_, func
@@ -367,7 +367,8 @@ def view_quiz(quiz_id):
 
 
 
-@app.route('/test/<int:quiz_id>')
+@app.route('/exam_portal/<int:quiz_id>')
+@login_required
 def exam_portal(quiz_id):
     quiz = Quiz.query.filter_by(id=quiz_id).first()
     # print(f"Got Time: {quiz.time_duration}", type({quiz.time_duration})) #Debug
@@ -380,29 +381,61 @@ def exam_portal(quiz_id):
 
     questions = quiz.questions
     current_question_index = 1  # Start with the first question
-    print(questions)
-    return render_template('exam_portal.html', quiz=quiz, quiz_duration=total_secs, questions=quiz.questions, current_question_index=current_question_index)
-
-
+    # Convert questions into a JSON-serializable list (dictionary format)
+    questions_data = [
+        {
+            "id": q.id,
+            "question_title": q.question_title,
+            "question_statement": q.question_statement,
+            "option1": q.option1,
+            "option2": q.option2,
+            "option3": q.option3,
+            "option4": q.option4,
+            "correct_option": q.correct_option
+        }
+        for q in quiz.questions
+    ]
+    # print(questions_data) #Debug
+    return render_template('exam_portal.html', quiz=quiz, quiz_duration=total_secs, questions=questions_data, current_question_index=current_question_index)
 
 
 @app.route('/submit_quiz', methods=['POST'])
-@login_required  # Ensure only logged-in users can submit quizzes
+@login_required
 def submit_quiz():
-    if request.method == 'POST':
-        # Extract the user's selected option (if any)
-        selected_option = request.form.get('option')
+    try:
+        data = request.get_json()  # Receive JSON from frontend
+        print(data)
+        user_id = data.get("user_id")
+        quiz_id = data.get("quiz_id")
+        answers = data.get("answers", [])  # Extract answers list
 
-        # Save the score or answers in the database
-        score = Score(user_id=current_user.id, quiz_id=session.get('quiz_id'), selected_option=selected_option)
-        db.session.add(score)
+        total_score = 0  # Initialize score
+        for answer in answers:
+            question_id = answer['question_id']
+            attempted_option = answer['attempted_option']
+
+            # Fetch the correct option from the database
+            question = Question.query.get(question_id)
+            correct_option = question.correct_option if question else None
+
+            # Compare attempted option with the correct one
+            if attempted_option and attempted_option == str(correct_option):  # Ensure comparison is string-based
+                total_score += 1  # Add points for correct answers
+
+        # print("Success")
+        # Save the score to the database
+        new_score = Score(user_id=user_id, quiz_id=quiz_id, total_scored=total_score)
+        # print("Agian Success")
+        db.session.add(new_score)
         db.session.commit()
 
-        flash("Quiz submitted successfully!", "success")
-        return redirect(url_for('dashboard'))  # Redirect to the user's dashboard after submission
+        return jsonify({"score": total_score})
 
-    flash("Invalid quiz submission!", "danger")
-    return redirect(url_for('exam_portal'))  # Redirect back to quiz page in case of an issue
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500  # Handle errors properly
+
+
 
 
 

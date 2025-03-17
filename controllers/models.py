@@ -3,6 +3,7 @@ from controllers import db, login_manager
 from flask_login import UserMixin
 from sqlalchemy import CheckConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.sql import func
 
 
 # Function to load user based on ID and role
@@ -70,7 +71,7 @@ class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     chapter_id = db.Column(db.Integer, db.ForeignKey('chapter.id'), nullable=False)
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
-    date_of_quiz = db.Column(db.DateTime, default=datetime.utcnow)
+    date_of_quiz = db.Column(db.DateTime, default=func.now())
     time_duration = db.Column(db.String(10))  # HH:MM format
     # no_of_questions = db.Column(db.Integer) # Need some work
     remarks = db.Column(db.Text)
@@ -103,7 +104,20 @@ class Score(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    time_stamp_of_attempt = db.Column(db.DateTime, default=datetime.utcnow)
+    time_stamp_of_attempt = db.Column(db.DateTime, default=func.now())
     total_scored = db.Column(db.Integer, nullable=False)
 
     user = db.relationship('User', backref='scores')
+    
+#Stores the reponse of the questions
+class UserAnswer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
+    selected_option = db.Column(db.Integer, nullable=False)  # Stores selected option (1-4)
+    is_correct = db.Column(db.Boolean, nullable=False)  # Whether the selected option is correct
+
+    user = db.relationship('User', backref='answers')
+    quiz = db.relationship('Quiz', backref='answers')
+    question = db.relationship('Question', backref='answers')
