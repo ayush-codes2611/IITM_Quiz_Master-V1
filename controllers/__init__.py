@@ -13,6 +13,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'ap
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///master.db'
 app.config['SECRET_KEY'] = '7564da6b69a5f4a73c57fd45' # Required for session management
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_TYPE'] = 'filesystem' 
 
 db = SQLAlchemy(app)  # Initialize SQLAlchemy with the app
 migrate = Migrate(app, db)

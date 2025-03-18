@@ -108,6 +108,12 @@ class Score(db.Model):
     total_scored = db.Column(db.Integer, nullable=False)
 
     user = db.relationship('User', backref='scores')
+
+    @hybrid_property
+    def formatted_timestamp(self):
+        if self.time_stamp_of_attempt:
+            return self.time_stamp_of_attempt.strftime("%d/%m/%y (%H:%M:%S)")
+        return None
     
 #Stores the reponse of the questions
 class UserAnswer(db.Model):

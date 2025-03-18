@@ -41,7 +41,7 @@
                         {% if current_user.__tablename__ == 'admin' %}
                             <a class="nav-link fs-5 px-3 py-2" href="{{url_for('quiz_management')}}">Quiz</a>
                         {% elif current_user.__tablename__ == 'user' %}
-                            <a class="nav-link fs-5 px-3 py-2" href="#">Scores</a>
+                            <a class="nav-link fs-5 px-3 py-2" href="{{ url_for('quiz_scores', user_id=current_user.id)}}">Scores</a>
                         {% endif %}
                         <a class="nav-link fs-5 px-3 py-2" href="{{url_for('search')}}">Search</a>
                         <a class="nav-link fs-5 px-3 py-2" href="#">Summary</a>

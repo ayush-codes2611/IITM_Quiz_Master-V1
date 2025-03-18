@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Student_dashboard
+{% endblock %}
+
+
+{% block styles %}
+{% endblock %}
+
+{% block content %} 
+    <div class="container mt-4">
+        
+        <!-- Upcoming Quiz -->
+            <h2>Quiz Scores</h2>
+            {% if scores %}
+                <table class="table table-hover shadow mt-3">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="text-center">ID</th>
+                            <th scope="col" class="text-center">Quiz Details</th>
+                            <th scope="col" class="text-center">No. of Questions</th>
+                            <th scope="col" class="text-center">Attempted On</th>
+                            <th scope="col" class="text-center">Scores</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for score in scores %}
+                            <tr>
+                                <th scope="col" class="text-center">{{ loop.index }}</th>
+                                <th scope="col" class="text-center">{{ score.quiz.subject.name }}({{ score.quiz.chapter.name }})</th>
+                                <td class="text-center">{{score.quiz.no_of_questions}}</td>
+                                <td class="text-center">{{score.formatted_timestamp}}</td>
+                                <td class="text-center">{{score.total_scored}}/{{score.quiz.no_of_questions}}</td>  
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="container"><h3 style="color: #808080;">You haven't participated in any quiz yet! Participate to have scores</h3></div>
+            {% endif %}
+
+
+    </div>
+{% endblock%}

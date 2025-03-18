@@ -36,7 +36,7 @@
             <h5>Question Menu</h5>
             <div class="d-flex flex-wrap">
                 {% for i in range(quiz.no_of_questions) %}
-                    <button class="btn btn-sm btn-outline-primary m-1 question-nav" data-target="#question-{{ loop.index }}">{{ loop.index }}</button>
+                    <button class="btn btn-sm btn-outline-primary m-1 question-nav" data-target="#question-{{ i }}">{{ loop.index }}</button>
                 {% endfor %}
             </div>
             <hr>
@@ -74,87 +74,93 @@
 <!-- scripts -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const timerElement = document.getElementById('timer');
-        const quizDuration = Number('{{ quiz_duration }}');
+    const timerElement = document.getElementById('timer');
+    const quizDuration = Number('{{ quiz_duration }}') * 60; // Convert to seconds
 
-        // ❗ Reset Timer for a Fresh Attempt
-        localStorage.removeItem('quiz_start_time');
-        let startTime = Date.now();
+    let startTime = localStorage.getItem('quiz_start_time'); // Retrieve stored start time
+
+    if (!startTime) {
+        // ❗ If no stored time (first entry from the dashboard), start a fresh session
+        startTime = Date.now();
         localStorage.setItem('quiz_start_time', startTime);
+    } else {
+        startTime = Number(startTime); // Convert string to number
+    }
 
-        function updateTimer() {
-            const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-            const timeLeft = Math.max(quizDuration - elapsedTime, 0);
-            const hours = Math.floor(timeLeft / 3600);
-            const minutes = Math.floor((timeLeft % 3600) / 60);
-            const seconds = timeLeft % 60;
-            timerElement.innerText = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    function updateTimer() {
+        const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+        const timeLeft = Math.max(quizDuration - elapsedTime, 0);
+        const hours = Math.floor(timeLeft / 3600);
+        const minutes = Math.floor((timeLeft % 3600) / 60);
+        const seconds = timeLeft % 60;
+        timerElement.innerText = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                alert('Time is up! Your quiz is being submitted.');
-                document.getElementById("submitExam").click();
-            }
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert('Time is up! Your quiz is being submitted.');
+            document.getElementById("submitExam").click();
         }
+    }
 
-        const timerInterval = setInterval(updateTimer, 1000);
-        updateTimer();
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
 
-        // Smooth scrolling to the selected question
-        document.querySelectorAll('.question-nav').forEach(button => {
-            button.addEventListener('click', function () {
-                const targetId = this.getAttribute('data-target');
-                const targetElement = document.querySelector(targetId);
-                if (targetElement) {
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-        });
-
-        // Submit quiz with confirmation alert
-        document.getElementById("submitExam").addEventListener("click", function (event) {
-            event.preventDefault(); // Prevent accidental submission
-
-            // Confirmation Alert Before Submission
-            if (!confirm("Are you sure you want to submit the quiz?")) {
-                return; // If the user cancels, stop execution
+    // Smooth scrolling to the selected question
+    document.querySelectorAll('.question-nav').forEach(button => {
+        button.addEventListener('click', function () {
+            const targetId = this.getAttribute('data-target');
+            const targetElement = document.querySelector(`${targetId}`);
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
-
-            let answers = [];
-            let userId = "{{ current_user.id }}";  
-            let subjectId = "{{ quiz.subject_id }}";  
-            let chapterId = "{{ quiz.chapter_id }}";  
-            let quizId = "{{ quiz.id }}";  
-
-            document.querySelectorAll(".question-section").forEach((questionSection) => {
-                let questionId = questionSection.getAttribute("data-question-id");
-                let attemptedOption = document.querySelector(`input[name="answer-${questionId}"]:checked`);
-
-                answers.push({
-                    "question_id": questionId,
-                    "attempted_option": attemptedOption ? attemptedOption.value : null,
-                });
-            });
-
-            // Send JSON to Flask backend
-            fetch("{{ url_for('submit_quiz') }}", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    user_id: userId,
-                    subject_id: subjectId,
-                    chapter_id: chapterId,
-                    quiz_id: quizId,
-                    answers: answers
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert("Quiz Submitted! Your Score: " + data.score);
-                window.location.href = "{{ url_for('dashboard') }}";
-            });
         });
     });
+
+    // Submit quiz with confirmation alert
+    document.getElementById("submitExam").addEventListener("click", function (event) {
+        event.preventDefault(); // Prevent accidental submission
+
+        if (!confirm("Are you sure you want to submit the quiz?")) {
+            return; // Stop execution if the user cancels
+        }
+
+        let answers = [];
+        let userId = "{{ current_user.id }}";  
+        let subjectId = "{{ quiz.subject_id }}";  
+        let chapterId = "{{ quiz.chapter_id }}";  
+        let quizId = "{{ quiz.id }}";  
+
+        document.querySelectorAll(".question-section").forEach((questionSection) => {
+            let questionId = questionSection.getAttribute("data-question-id");
+            let attemptedOption = document.querySelector(`input[name="answer-${questionId}"]:checked`);
+
+            answers.push({
+                "question_id": questionId,
+                "attempted_option": attemptedOption ? attemptedOption.value : null,
+            });
+        });
+
+        // Send JSON to Flask backend
+        fetch("{{ url_for('submit_quiz') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: userId,
+                subject_id: subjectId,
+                chapter_id: chapterId,
+                quiz_id: quizId,
+                answers: answers
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert("Quiz Submitted! Your Score: " + data.score);
+            localStorage.removeItem('quiz_start_time'); // ❗ Clear stored time after submission
+            window.location.href = "{{ url_for('dashboard') }}";
+        });
+    });
+});
+
 </script>
 
 {% endblock %}

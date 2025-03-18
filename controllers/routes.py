@@ -9,7 +9,8 @@ from controllers import app, db
 from controllers.models import Admin, User, Subject, Chapter,  Question, Score, Quiz, UserAnswer
 import os
 import matplotlib.pyplot as plt
-from sqlalchemy import or_, and_, func
+from sqlalchemy import or_, and_, func, desc
+from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -72,7 +73,7 @@ def login():
         # print(Admin.query.filter_by(email=email).first())
         if admin and check_password_hash(admin.password, password) and validate_email(email):
             # user_id = f"admin-{admin.id}"
-            login_user(admin)
+            login_user(admin, remember=False)
             # session['user_type'] = 'admin'
             # session['user_id'] = admin.id
             flash(f"Success! You are logged in as Admin with email {email}", "success")
@@ -81,10 +82,10 @@ def login():
         # Check if user is a User
         user = User.query.filter_by(email=email).first()
         print(f"User: {user}, Email={email}")
-        if User and check_password_hash(user.password, password) and validate_email(email):
+        if user and check_password_hash(user.password, password) and validate_email(email):
             # user_id = f"User-{User.id}"
             try:
-                login_user(user)
+                login_user(user, remember=False)
                 return redirect(url_for('dashboard'))
             except Exception as e:
                 print(f"Error: {e}, line 60")
@@ -100,7 +101,9 @@ def login():
             # elif not user.is_approved:
             #     flash("Your account has been blocked by admin due to fraudulent activity. Please contact admin at 'Ay@yahoo.com'", "danger")
             #     return render_template('login.html')
-        flash('Invalid email or password. Please check!', 'danger')
+        else: 
+            flash('Invalid email or password. Please check!', 'danger')
+            return redirect(url_for('login'))
     
     return render_template('login.html')
 
@@ -365,8 +368,6 @@ def view_quiz(quiz_id):
     return render_template('quiz_details.html', quiz=quiz)
 
 
-
-
 @app.route('/exam_portal/<int:quiz_id>')
 @login_required
 def exam_portal(quiz_id):
@@ -397,6 +398,19 @@ def exam_portal(quiz_id):
     ]
     # print(questions_data) #Debug
     return render_template('exam_portal.html', quiz=quiz, quiz_duration=total_secs, questions=questions_data, current_question_index=current_question_index)
+
+@app.route('/quiz_scores/<int:user_id>')
+@login_required
+def quiz_scores(user_id=None):
+    scores = (
+        Score.query
+        .join(Quiz)  # Join to access Quiz fields
+        .filter(Score.user_id == user_id)
+        .order_by(Quiz.chapter_id, Score.time_stamp_of_attempt.desc())  # Order by chapter and timestamp
+        .options(joinedload(Score.quiz))  # Eager load to reduce queries
+        .all()
+    )
+    return render_template('quiz_scores.html', scores=scores)
 
 
 @app.route('/submit_quiz', methods=['POST'])
