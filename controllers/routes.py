@@ -337,29 +337,34 @@ def dashboard():
     # if role == 'admin':
     if isinstance(current_user, Admin):
         subjects = Subject.query.all()
-
-        # prof = Professional.query.all()
-        # custs = Customer.query.all()
-        # requests = ServiceRequests.query.all()
         return render_template('dashboard.html', subjects=subjects)
     
     # if role == 'customer':
     if isinstance(current_user, User):
         quizes = Quiz.query.all()
-        # services = Service.query.all()
-        # customer=Customer.query.filter_by(id=user_id).first()
-        # available_services = (
-        # db.session.query(Service)
-        # .join(ServiceLocation)
-        # .filter(ServiceLocation.pin_code == customer.pin_code)
-        # .all()
-        # )
-        # service_history = ServiceRequests.query.filter_by(customer_id=session.get('user_id')).order_by(ServiceRequests.date_of_request.desc()).all()
-        return render_template('student_dashboard.html', quizes=quizes)
+        # return render_template('student_dashboard.html', quizes=quizes)
+        return redirect(url_for('student_dashboard'))
     
     return render_template('dashboard.html')
 
 # Student Interactions
+@app.route('/student_dashboard')
+@login_required
+def student_dashboard():
+    today = datetime.now().date()
+    
+    # Fetch all quizzes
+    quizes = Quiz.query.all()
+
+    # Separate upcoming and previous quizzes
+    upcoming_quizzes = [quiz for quiz in quizes if quiz.date_of_quiz.date() >= today]
+    previous_quizzes = [quiz for quiz in quizes if quiz.date_of_quiz.date() < today]
+
+    return render_template('student_dashboard2.html', 
+                           upcoming_quizzes=quizes, 
+                           previous_quizzes=previous_quizzes)
+
+
 @app.route('/student/view_details<int:quiz_id>', methods=['GET', 'POST'])
 def view_quiz(quiz_id):
     if request.method=='POST':

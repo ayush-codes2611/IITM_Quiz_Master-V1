@@ -29,7 +29,7 @@
         <!-- Left Panel: Question Navigation & Timer -->
         <div class="col-md-3 bg-white p-3 fixed-nav">
             <h5 class="me-5">Exam:</h5>
-            <p>{{ quiz.subject.name }} - chapter({{ quiz.chapter_id }})</p>
+            <p>{{ quiz.subject.name }} - ({{ quiz.chapter.name }})</p>
             <h6>Total Marks: {{ quiz.no_of_questions * 1 }}</h6>
             <hr>
             
@@ -74,36 +74,35 @@
 <!-- scripts -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-    const timerElement = document.getElementById('timer');
-    const quizDuration = Number('{{ quiz_duration }}') * 60; // Convert to seconds
+        const timerElement = document.getElementById('timer');
+        const quizDuration = Number('{{ quiz_duration }}'); // Now in seconds
 
-    let startTime = localStorage.getItem('quiz_start_time'); // Retrieve stored start time
+        let startTime = localStorage.getItem('quiz_start_time');
 
-    if (!startTime) {
-        // ❗ If no stored time (first entry from the dashboard), start a fresh session
-        startTime = Date.now();
-        localStorage.setItem('quiz_start_time', startTime);
-    } else {
-        startTime = Number(startTime); // Convert string to number
-    }
-
-    function updateTimer() {
-        const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-        const timeLeft = Math.max(quizDuration - elapsedTime, 0);
-        const hours = Math.floor(timeLeft / 3600);
-        const minutes = Math.floor((timeLeft % 3600) / 60);
-        const seconds = timeLeft % 60;
-        timerElement.innerText = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            alert('Time is up! Your quiz is being submitted.');
-            document.getElementById("submitExam").click();
+        if (!startTime) {
+            startTime = Date.now();
+            localStorage.setItem('quiz_start_time', startTime);
+        } else {
+            startTime = Number(startTime);
         }
-    }
 
-    const timerInterval = setInterval(updateTimer, 1000);
-    updateTimer();
+        function updateTimer() {
+            const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            const timeLeft = Math.max(quizDuration - elapsedTime, 0);
+            const hours = Math.floor(timeLeft / 3600);
+            const minutes = Math.floor((timeLeft % 3600) / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                alert('Time is up! Your quiz is being submitted.');
+                document.getElementById("submitExam").click();
+            }
+        }
+
+        const timerInterval = setInterval(updateTimer, 1000);
+        updateTimer();
 
     // Smooth scrolling to the selected question
     document.querySelectorAll('.question-nav').forEach(button => {
