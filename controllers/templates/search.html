@@ -16,19 +16,14 @@
                 <select id="search-by" name="search_by" class="form-select" aria-placeholder="--Search by--" required>
                     {% if current_user.__tablename__ == 'admin' %}
                         <option value="" selected disabled>--Search by--</option>
-                        <option value="Professionals">Professionals</option>
-                        <option value="Customers">Customers</option>
-                        <option value="Services">Services</option>
-                        <option value="ServiceRequests">Service Requests</option>
-                    {% elif current_user.__tablename__ == 'professionals' %}
+                        <option value="user">Users</option>
+                        <option value="subject">Subject</option>
+                        <option value="quiz">Quiz</option>
+                    {% elif current_user.__tablename__ == 'user' %}
                         <option value="" selected disabled>--Search by--</option>
-                        <option value="Customers">Customers</option>
-                        <option value="ServiceRequests">Service Requests</option>
-                    {% elif current_user.__tablename__ == 'customers' %}
-                        <option value="" selected disabled>--Search by--</option>
-                        <option value="Professionals">Professionals</option>
-                        <option value="Services">Services</option>
-                        <option value="ServiceRequests">Service Requests</option>
+                        <option value="subject">Subject</option>
+                        <option value="quiz">Quiz</option>
+                        <option value="score">Score</option>
                     {% else %}
                         <option value="">Something went wrong</option>
                     {% endif %}
@@ -47,15 +42,21 @@
             {% if results %}
                 <thead>
                     <tr>
+                        {% if "id" not in column_names %}
+                            <th scope="col" class="text-center">S.no</th>
+                        {% endif %}
                         {% for column_name in column_names %}
-                            <th scope="col" class="text-center">{{ column_name }}</th>
+                        <th scope="col" class="text-center">{{ column_name }}</th>
                         {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in results %}
                         <tr>
-                            {% for column in column_names %}
+                            {%if "id" not in column_names %}
+                                <td class="text-center">{{loop.index}}</td>
+                            {% endif %}
+                            {% for column in column_names %} 
                                 <td class="text-center">
                                     {% if search_by == "Professionals" and column == "document_path" %}
                                         {% if item[column] %}

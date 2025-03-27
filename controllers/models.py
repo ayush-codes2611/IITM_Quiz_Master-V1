@@ -115,15 +115,15 @@ class Score(db.Model):
             return self.time_stamp_of_attempt.strftime("%d/%m/%y (%H:%M:%S)")
         return None
     
-#Stores the reponse of the questions
-class UserAnswer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
-    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
-    selected_option = db.Column(db.Integer, nullable=False)  # Stores selected option (1-4)
-    is_correct = db.Column(db.Boolean, nullable=False)  # Whether the selected option is correct
+# #Stores the reponse of the questions
+# class UserAnswer(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
+#     question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
+#     selected_option = db.Column(db.Integer, nullable=False)  # Stores selected option (1-4)
+#     is_correct = db.Column(db.Boolean, nullable=False)  # Whether the selected option is correct
 
-    user = db.relationship('User', backref='answers')
-    quiz = db.relationship('Quiz', backref='answers')
-    question = db.relationship('Question', backref='answers')
+#     user = db.relationship('User', backref='answers')
+#     quiz = db.relationship('Quiz', backref='answers')
+#     question = db.relationship('Question', backref='answers')

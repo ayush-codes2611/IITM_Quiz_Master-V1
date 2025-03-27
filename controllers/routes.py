@@ -6,11 +6,11 @@ from email_validator import validate_email
 from flask import render_template, session, request, flash, redirect, url_for, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
 from controllers import app, db
-from controllers.models import Admin, User, Subject, Chapter,  Question, Score, Quiz, UserAnswer
+from controllers.models import Admin, User, Subject, Chapter,  Question, Score, Quiz
 import os
 import matplotlib.pyplot as plt
 from sqlalchemy import or_, and_, func, desc
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, load_only
 from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -466,7 +466,87 @@ def logout():
     flash("You have been logged out successfully.", "info")
     return redirect(url_for('login'))  # Redirect to login page instead of home page
 
-@app.route('/search')
-@login_required
+
+@app.route('/search', methods=['GET'])
 def search():
-    return render_template('search.html')
+    # Step 1: Determine if user is 'admin' or 'user'
+    user_role = "admin" if  current_user.__tablename__=='admin' else "user"
+
+    # Step 2: Define accessible models for each role
+    possible_models = {
+        "admin": {'user': User, 'subject': Subject, 'quiz': Quiz},
+        "user": {'subject': Subject, 'quiz': Quiz, 'score': Score, "chapter": Chapter}
+    }
+
+    # Step 3: Define filterable and displayable columns
+    col = {
+        "filterable_cols": {
+            "user": ['fullname', 'email', 'username', 'qualification'],
+            "subject": ["name"],
+            "quiz": ["date_of_quiz", "time_duration"],
+            "score": ["total_scored"], #need to add the date of quiz too.
+            "chapter": ["name"]
+        },
+        "displayable_columns": {
+            "admin": {
+                "user": ["id", "fullname", "username", "qualification", "document_path"],
+                "subject": ["id", "name", "description"],
+                "quiz": ["id", "date_of_quiz", "time_duration"]
+            },
+            "user": {
+                "chapter": ["name", "description"],
+                "subject": ["id", "name", "description"],
+                "quiz": ["date_of_quiz", "time_duration"],
+                "score": ["time_stamp_of_attempt", "total_scored"]
+            }
+        }
+    }
+
+    # Step 4: Get user input (default to empty if missing)
+    search_by = request.args.get('search_by', '').lower()
+    search_text = request.args.get('search_text', '').lower()
+
+    # Step 5: Pass possible models to template (for dropdown)
+    model_options = possible_models[user_role]
+
+    # If the user has not selected a model yet, just show the search page
+    if not search_by:
+        return render_template('search.html', possible_models=model_options, results=[])
+
+    # Step 6: Validate search_by and fetch model
+    selected_model = model_options.get(search_by)
+    if not selected_model or search_by not in col["filterable_cols"]:
+        return render_template('search.html', possible_models=model_options, results=[])
+
+    # Step 7: Construct filter conditions
+    filter_conditions = [
+        getattr(selected_model, col_name).ilike(f"%{search_text}%")
+        for col_name in col["filterable_cols"][search_by]
+    ]
+
+    # # Step 8: Query the database
+    # results = selected_model.query \
+    #     .filter(or_(*filter_conditions)) \
+    #      .options(load_only(*[getattr(selected_model, col) for col in col["displayable_columns"][user_role][search_by]])) \
+    #     .all()
+    # print(results)
+
+    query = selected_model.query.filter(or_(*filter_conditions))
+    # If querying the Score model, filter by current user
+    if selected_model == Score:
+        print(current_user.id)
+        query = query.filter(and_(Score.user_id == current_user.id, or_(*filter_conditions)))
+        print(query)
+    results = query.options(
+        load_only(*[getattr(selected_model, col) for col in col["displayable_columns"][user_role][search_by]])
+    ).all()
+
+    print(f"Results: {results}")
+    print(f"Column_names: {col['displayable_columns'][current_user.__tablename__][search_by]}")
+
+    # Step 9: Render template with possible models and results
+    return render_template('search.html', possible_models=model_options, results=results, search_by=search_by, search_text=search_text, column_names=col['displayable_columns'][current_user.__tablename__][search_by])
+
+@app.route("/test")
+def test():
+    return current_user.__tablename__
