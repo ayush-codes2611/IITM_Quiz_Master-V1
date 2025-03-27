@@ -470,3 +470,7 @@ def logout():
 @login_required
 def search():
     return render_template('search.html')
+
+@app.route("/say_hi")
+def say_hi():
+    return "<h1>Hello</h1>"
