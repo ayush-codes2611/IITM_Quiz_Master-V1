@@ -1,6 +1,6 @@
 import matplotlib
 matplotlib.use('Agg')
-import time
+import time, random
 from datetime import datetime
 from email_validator import validate_email
 from flask import render_template, session, request, flash, redirect, url_for, send_from_directory
@@ -550,3 +550,81 @@ def search():
 @app.route("/test")
 def test():
     return current_user.__tablename__
+
+# @app.route('/summary')
+# def summary():
+#     save_dir = os.path.join(app.root_path, 'static', "summary_images") #Here the the root is controllers we are making summaary_images dir. 
+#     os.makedirs(save_dir, exist_ok=True)  # Create the directory if it doesn't exist
+#     try: 
+#         if isinstance(current_user, Admin):
+@app.route('/admin-summary-stats')
+def summary_stats():
+    subjects = [row[0] for row in db.session.query(Subject.name).all()]
+
+    # Generate consistent colors for subjects
+    subject_colors = {subj: f'rgba({random.randint(50, 255)}, {random.randint(50, 255)}, {random.randint(50, 255)}, 0.5)' for subj in subjects}
+    subject_borders = {subj: subject_colors[subj].replace("0.5", "1") for subj in subjects}  # Stronger border color
+
+    # Fetch Subject-Wise Quiz Counts
+    quiz_counts = (
+        db.session.query(Subject.name, func.count(Quiz.id))
+        .outerjoin(Quiz, Subject.id == Quiz.subject_id)
+        .group_by(Subject.name)
+        .all()
+    )
+
+    # Fetch Subject-Wise Quiz Attempts
+    quiz_attempts = (
+        db.session.query(Subject.name, func.count(Score.id))
+        .join(Quiz, Subject.id == Quiz.subject_id)
+        .join(Score, Quiz.id == Score.quiz_id)
+        .group_by(Subject.name)
+        .all()
+    )
+
+    # Fetch Top Performer and Average Scores per Subject
+    performance_stats = (
+        db.session.query(
+            Subject.name,
+            func.max(Score.total_scored).label("top_score"),
+            func.avg(Score.total_scored).label("avg_score")
+        )
+        .join(Quiz, Subject.id == Quiz.subject_id)
+        .join(Score, Quiz.id == Score.quiz_id)
+        .group_by(Subject.name)
+        .all()
+    )
+
+    # Structure Data for Each Graph
+    data = {
+        "quiz_counts": {
+            "title": "Number of Quizzes per Subject",
+            "labels": [row[0] for row in quiz_counts],
+            "values": [row[1] for row in quiz_counts],
+            "backgroundColors": [subject_colors[row[0]] for row in quiz_counts],
+            "borderColors": [subject_borders[row[0]] for row in quiz_counts]
+        },
+        "quiz_attempts": {
+            "title": "Total Quiz Attempts per Subject",
+            "labels": [row[0] for row in quiz_attempts],
+            "values": [row[1] for row in quiz_attempts],
+            "backgroundColors": [subject_colors[row[0]] for row in quiz_attempts],
+            "borderColors": [subject_borders[row[0]] for row in quiz_attempts]
+        },
+        "performance_stats": {
+            "title": "Top Performer vs. Average Score per Subject",
+            "labels": [row[0] for row in performance_stats],
+            "top_scores": [row[1] for row in performance_stats],
+            "avg_scores": [round(row[2], 2) for row in performance_stats],
+            "backgroundColors": [subject_colors[row[0]] for row in performance_stats],
+            "borderColors": [subject_borders[row[0]] for row in performance_stats]
+        }
+    }
+
+    return jsonify(data)
+
+
+
+@app.route('/admin-stats-page')
+def admin_stats_page():
+    return render_template('admin_stats.html')
