@@ -9,7 +9,7 @@ from controllers import app, db
 from controllers.models import Admin, User, Subject, Chapter,  Question, Score, Quiz
 import os
 import matplotlib.pyplot as plt
-from sqlalchemy import or_, and_, func, desc
+from sqlalchemy import or_, and_, func, distinct
 from sqlalchemy.orm import joinedload, load_only
 from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
@@ -680,75 +680,93 @@ def admin_summary_stats():
 
     return jsonify(data)
 
-from collections import defaultdict
-from datetime import datetime, timedelta
 from flask import jsonify
 from flask_login import login_required, current_user
+from datetime import datetime
+from sqlalchemy import func, extract
 
-@app.route('/user-summary-stats')
-def user_summary_stats():
-    # Fetch total counts
-    total_quizzes = db.session.query(Quiz.id).count()
-    total_attempts = db.session.query(Score.id).filter_by(user_id=current_user.id).count()
-    total_subjects = db.session.query(Subject.id).count()
+@app.route('/api/user_summary_data')
+@login_required
+def user_summary_data():
+    today = datetime.now()
 
-    # Fetch Subject-Wise Quiz Counts for the User
-    quiz_counts = (
+    # Fetch all subjects
+    subjects = db.session.query(Subject).all()
+
+    # Fetch past quizzes (before today)
+    past_quizzes = (
         db.session.query(Subject.name, func.count(Quiz.id))
-        .outerjoin(Quiz, Subject.id == Quiz.subject_id)
+        .join(Quiz, Quiz.subject_id == Subject.id)
+        .filter(Quiz.date_of_quiz < today)
         .group_by(Subject.name)
         .all()
     )
 
-    # Fetch Subject-Wise Quiz Attempts for the User
-    quiz_attempts = (
-        db.session.query(Subject.name, func.count(Score.id))
-        .join(Quiz, Subject.id == Quiz.subject_id)
-        .join(Score, Quiz.id == Score.quiz_id)
+    # Fetch ongoing quizzes (today or later)
+    ongoing_quizzes = (
+        db.session.query(Subject.name, func.count(Quiz.id))
+        .join(Quiz, Quiz.subject_id == Subject.id)
+        .filter(Quiz.date_of_quiz >= today)
+        .group_by(Subject.name)
+        .all()
+    )
+
+    # Fetch monthly quiz attempts (only one attempt per quiz per month per user)
+    monthly_attempts = (
+        db.session.query(
+            extract('year', Score.time_stamp_of_attempt).label("year"),
+            extract('month', Score.time_stamp_of_attempt).label("month"),
+            func.count(func.distinct(Score.quiz_id)).label("attempts")
+        )
         .filter(Score.user_id == current_user.id)
-        .group_by(Subject.name)
+        .group_by("year", "month")
+        .order_by("year", "month")
         .all()
     )
 
-    # Fetch Quiz Attempt History for the Heatmap
-    attempt_history = db.session.query(Score.time_stamp_of_attempt).filter_by(user_id=current_user.id).all()
-    
-    attempt_data = defaultdict(int)
-    for attempt in attempt_history:
-        date_str = attempt.time_stamp_of_attempt.strftime('%Y-%m-%d')
-        attempt_data[date_str] += 1
+    # Convert subject-wise quiz data to a dictionary
+    quiz_data = {sub.name: {"past": 0, "ongoing": 0} for sub in subjects}
 
-    # Fill missing dates (Past 12 months)
-    today = datetime.today()
-    start_date = today - timedelta(days=365)
-    date_labels = [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(366)]
-    heatmap_data = [attempt_data.get(date, 0) for date in date_labels]
+    for subject_name, count in past_quizzes:
+        quiz_data[subject_name]["past"] = count
 
-    # Prepare the response
-    data = {
-        "summary": {
-            "total_quizzes": total_quizzes,
-            "total_attempts": total_attempts,
-            "total_subjects": total_subjects
-        },
-        "quiz_counts": {
-            "title": "Number of Quizzes per Subject",
-            "labels": [row[0] for row in quiz_counts],
-            "values": [row[1] for row in quiz_counts]
-        },
-        "quiz_attempts": {
-            "title": "Total Quiz Attempts per Subject",
-            "labels": [row[0] for row in quiz_attempts],
-            "values": [row[1] for row in quiz_attempts]
-        },
-        "heatmap": {
-            "title": "Quiz Consistency Heatmap",
-            "dates": date_labels,
-            "values": heatmap_data
-        }
+    for subject_name, count in ongoing_quizzes:
+        quiz_data[subject_name]["ongoing"] = count
+
+    # Convert subject-wise quiz data to list format
+    quiz_data_list = [
+        {"subject": sub, "past": data["past"], "ongoing": data["ongoing"]}
+        for sub, data in quiz_data.items()
+    ]
+
+    # Convert monthly attempts data to JSON format
+    monthly_attempts_data = [
+        {"month": f"{int(year)}-{int(month):02d}", "attempts": attempts}
+        for year, month, attempts in monthly_attempts
+    ]
+
+    # Summary Metrics
+    total_quizzes = Quiz.query.count()
+    past_quiz_count = sum(data["past"] for data in quiz_data.values())
+    ongoing_quiz_count = sum(data["ongoing"] for data in quiz_data.values())
+    total_subjects = len(subjects)
+
+    summary = {
+        "total_quizzes": total_quizzes,
+        "past_quizzes": past_quiz_count,
+        "ongoing_quizzes": ongoing_quiz_count,
+        "total_subjects": total_subjects
     }
 
-    return jsonify(data)
+    return jsonify({
+        "summary": summary,
+        "quiz_data": quiz_data_list,
+        "monthly_attempts": monthly_attempts_data
+    })
+
+
+
+
 
 
 @app.route('/summary')
@@ -761,3 +779,8 @@ def summary():
     else: 
         flash("Sorry something went wrong", "danger")
         return redirect(request.url)
+
+
+
+
+

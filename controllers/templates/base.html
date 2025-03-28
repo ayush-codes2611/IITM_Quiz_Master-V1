@@ -45,7 +45,7 @@
                             <a class="nav-link fs-5 px-3 py-2" href="{{ url_for('quiz_scores', user_id=current_user.id)}}">Scores</a>
                         {% endif %}
                         <a class="nav-link fs-5 px-3 py-2" href="{{url_for('search')}}">Search</a>
-                        <a class="nav-link fs-5 px-3 py-2" href="#">Summary</a>
+                        <a class="nav-link fs-5 px-3 py-2" href="{{url_for('summary')}}">Summary</a>
                         <a class="nav-link fs-5 px-3 py-2" href="{{url_for('logout')}}">Logout</a>
                     </div>
                 </div>

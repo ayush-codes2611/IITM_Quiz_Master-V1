@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}User Summary{% endblock %}
+
+{% block content %}
+<style>
+    .summary-container {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 15px;
+        min-width: 150px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .summary-card span {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+    }
+
+    .charts-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        padding: 20px;
+    }
+
+    .chart-wrapper {
+        width: 45%;
+        height: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .chart-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    canvas {
+        max-width: 100%;
+        max-height: 100%;
+    }
+</style>
+
+<div class="container">
+    <!-- Summary Metrics -->
+    <div class="summary-container">
+        <div class="summary-card">
+            <div class="summary-title">Total Quizzes</div>
+            <span id="totalQuizzes">0</span>
+        </div>
+        <div class="summary-card">
+            <div class="summary-title">Past Quizzes</div>
+            <span id="pastQuizzes">0</span>
+        </div>
+        <div class="summary-card">
+            <div class="summary-title">Ongoing Quizzes</div>
+            <span id="ongoingQuizzes">0</span>
+        </div>
+        <div class="summary-card">
+            <div class="summary-title">Total Subjects</div>
+            <span id="totalSubjects">0</span>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-container">
+        <div class="chart-wrapper">
+            <div class="chart-title">Past & Ongoing Quizzes by Subject</div>
+            <canvas id="quizStackedChart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+            <div class="chart-title">Monthly Quiz Attempts</div>
+            <canvas id="monthlyAttemptsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateSummaryMetrics(data) {
+        document.getElementById("totalQuizzes").textContent = data.total_quizzes;
+        document.getElementById("pastQuizzes").textContent = data.past_quizzes;
+        document.getElementById("ongoingQuizzes").textContent = data.ongoing_quizzes;
+        document.getElementById("totalSubjects").textContent = data.total_subjects;
+    }
+
+    function createStackedBarChart(data) {
+        const labels = data.map(item => item.subject);
+        const pastQuizzes = data.map(item => item.past);
+        const ongoingQuizzes = data.map(item => item.ongoing);
+
+        new Chart(document.getElementById("quizStackedChart"), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: "Past Quizzes", data: pastQuizzes, backgroundColor: "rgba(75, 192, 192, 0.6)" },
+                    { label: "Ongoing Quizzes", data: ongoingQuizzes, backgroundColor: "rgba(255, 99, 132, 0.6)" }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } },
+                scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+            }
+        });
+    }
+
+    function createMonthlyAttemptsChart(data) {
+        const labels = data.map(item => item.month);
+        const attempts = data.map(item => item.attempts);
+
+        new Chart(document.getElementById("monthlyAttemptsChart"), {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: "Quiz Attempts", data: attempts, backgroundColor: "rgba(54, 162, 235, 0.6)" }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } } }
+        });
+    }
+
+    fetch('/api/user_summary_data')
+        .then(response => response.json())
+        .then(data => {
+            updateSummaryMetrics(data.summary);
+            createStackedBarChart(data.quiz_data);
+            createMonthlyAttemptsChart(data.monthly_attempts);
+        })
+        .catch(error => console.error("Error fetching data:", error));
+</script>
+
+{% endblock %}
