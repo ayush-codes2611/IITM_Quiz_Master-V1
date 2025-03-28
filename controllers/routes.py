@@ -15,6 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import jsonify
+from collections import defaultdict
 
 
 # Testing
@@ -411,7 +412,7 @@ def quiz_scores(user_id=None):
         Score.query
         .join(Quiz)  # Join to access Quiz fields
         .filter(Score.user_id == user_id)
-        .order_by(Quiz.chapter_id, Score.time_stamp_of_attempt.desc())  # Order by chapter and timestamp
+        .order_by(Quiz.chapter_id, Score.time_stamp_of_attempt.desc())  # Order by chapter and time_stamp_of_attempt
         .options(joinedload(Score.quiz))  # Eager load to reduce queries
         .all()
     )
@@ -558,12 +559,41 @@ def test():
 #     try: 
 #         if isinstance(current_user, Admin):
 @app.route('/admin-summary-stats')
-def summary_stats():
+def admin_summary_stats():
     subjects = [row[0] for row in db.session.query(Subject.name).all()]
 
     # Generate consistent colors for subjects
     subject_colors = {subj: f'rgba({random.randint(50, 255)}, {random.randint(50, 255)}, {random.randint(50, 255)}, 0.5)' for subj in subjects}
     subject_borders = {subj: subject_colors[subj].replace("0.5", "1") for subj in subjects}  # Stronger border color
+
+    # Fetch Total Counts
+    total_users = db.session.query(User.id).count()
+    total_quizzes = db.session.query(Quiz.id).count()
+    total_attempts = db.session.query(Score.id).count()
+    total_subjects = db.session.query(Subject.id).count()
+
+    # Most Popular Subject (by quiz attempts)
+    most_popular_subject = (
+        db.session.query(Subject.name, func.count(Score.id))
+        .join(Quiz, Subject.id == Quiz.subject_id)
+        .join(Score, Quiz.id == Score.quiz_id)
+        .group_by(Subject.name)
+        .order_by(func.count(Score.id).desc())
+        .limit(1)
+        .first()
+    )
+    most_popular_subject = most_popular_subject[0] if most_popular_subject else "N/A"
+
+    # Top Scorer (Overall)
+    top_scorer = (
+        db.session.query(User.fullname, func.sum(Score.total_scored))
+        .join(Score, User.id == Score.user_id)
+        .group_by(User.id)
+        .order_by(func.sum(Score.total_scored).desc())
+        .limit(1)
+        .first()
+    )
+    top_scorer = top_scorer[0] if top_scorer else "N/A"
 
     # Fetch Subject-Wise Quiz Counts
     quiz_counts = (
@@ -595,8 +625,29 @@ def summary_stats():
         .all()
     )
 
+    # Fetch Monthly Quiz Attempts (For Line Chart)
+    monthly_attempts = defaultdict(int)
+    scores = db.session.query(Score.time_stamp_of_attempt).all()
+    
+    for score in scores:
+        month_year = score.time_stamp_of_attempt.strftime('%b %Y')  # Example: "Mar 2025"
+        monthly_attempts[month_year] += 1
+
+    # Sort monthly data by date order
+    sorted_monthly_attempts = sorted(monthly_attempts.items(), key=lambda x: datetime.strptime(x[0], '%b %Y'))
+    monthly_labels = [entry[0] for entry in sorted_monthly_attempts]
+    monthly_values = [entry[1] for entry in sorted_monthly_attempts]
+
     # Structure Data for Each Graph
     data = {
+         "summary": {
+            "total_users": total_users,
+            "total_quizzes": total_quizzes,
+            "total_attempts": total_attempts,
+            "total_subjects": total_subjects,
+            "most_popular_subject": most_popular_subject,
+            "top_scorer": top_scorer
+        },
         "quiz_counts": {
             "title": "Number of Quizzes per Subject",
             "labels": [row[0] for row in quiz_counts],
@@ -618,13 +669,95 @@ def summary_stats():
             "avg_scores": [round(row[2], 2) for row in performance_stats],
             "backgroundColors": [subject_colors[row[0]] for row in performance_stats],
             "borderColors": [subject_borders[row[0]] for row in performance_stats]
+        },
+        "monthly_attempts": {
+            "title": "User Participation Over Time",
+            "labels": monthly_labels,
+            "values": monthly_values
+        }
+
+    }
+
+    return jsonify(data)
+
+from collections import defaultdict
+from datetime import datetime, timedelta
+from flask import jsonify
+from flask_login import login_required, current_user
+
+@app.route('/user-summary-stats')
+def user_summary_stats():
+    # Fetch total counts
+    total_quizzes = db.session.query(Quiz.id).count()
+    total_attempts = db.session.query(Score.id).filter_by(user_id=current_user.id).count()
+    total_subjects = db.session.query(Subject.id).count()
+
+    # Fetch Subject-Wise Quiz Counts for the User
+    quiz_counts = (
+        db.session.query(Subject.name, func.count(Quiz.id))
+        .outerjoin(Quiz, Subject.id == Quiz.subject_id)
+        .group_by(Subject.name)
+        .all()
+    )
+
+    # Fetch Subject-Wise Quiz Attempts for the User
+    quiz_attempts = (
+        db.session.query(Subject.name, func.count(Score.id))
+        .join(Quiz, Subject.id == Quiz.subject_id)
+        .join(Score, Quiz.id == Score.quiz_id)
+        .filter(Score.user_id == current_user.id)
+        .group_by(Subject.name)
+        .all()
+    )
+
+    # Fetch Quiz Attempt History for the Heatmap
+    attempt_history = db.session.query(Score.time_stamp_of_attempt).filter_by(user_id=current_user.id).all()
+    
+    attempt_data = defaultdict(int)
+    for attempt in attempt_history:
+        date_str = attempt.time_stamp_of_attempt.strftime('%Y-%m-%d')
+        attempt_data[date_str] += 1
+
+    # Fill missing dates (Past 12 months)
+    today = datetime.today()
+    start_date = today - timedelta(days=365)
+    date_labels = [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(366)]
+    heatmap_data = [attempt_data.get(date, 0) for date in date_labels]
+
+    # Prepare the response
+    data = {
+        "summary": {
+            "total_quizzes": total_quizzes,
+            "total_attempts": total_attempts,
+            "total_subjects": total_subjects
+        },
+        "quiz_counts": {
+            "title": "Number of Quizzes per Subject",
+            "labels": [row[0] for row in quiz_counts],
+            "values": [row[1] for row in quiz_counts]
+        },
+        "quiz_attempts": {
+            "title": "Total Quiz Attempts per Subject",
+            "labels": [row[0] for row in quiz_attempts],
+            "values": [row[1] for row in quiz_attempts]
+        },
+        "heatmap": {
+            "title": "Quiz Consistency Heatmap",
+            "dates": date_labels,
+            "values": heatmap_data
         }
     }
 
     return jsonify(data)
 
 
-
-@app.route('/admin-stats-page')
-def admin_stats_page():
-    return render_template('admin_stats.html')
+@app.route('/summary')
+@login_required
+def summary():
+    if isinstance(current_user, Admin):
+        return render_template('admin_summary.html')
+    elif isinstance(current_user, User):
+        return render_template('user_summary.html')
+    else: 
+        flash("Sorry something went wrong", "danger")
+        return redirect(request.url)
