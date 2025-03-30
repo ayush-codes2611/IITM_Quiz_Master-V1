@@ -38,23 +38,31 @@
                 <div class="collapse navbar-collapse justify-content-center" id="navbarNavAltMarkup">
                     <!-- Middle: Centered Navigation Links -->
                     <div class="navbar-nav">
-                        <a class="nav-link fs-5 px-3 py-2" aria-current="page" href="{{url_for('dashboard')}}">Home</a>
+                        <a class="nav-link fs-5 px-3 py-2" aria-current="page" href="{{url_for('dashboard')}}"><i class="fa-solid fa-house"></i> Home</a>
                         {% if current_user.__tablename__ == 'admin' %}
-                            <a class="nav-link fs-5 px-3 py-2" href="{{url_for('quiz_management')}}">Quiz</a>
+                            <a class="nav-link fs-5 px-3 py-2" href="{{url_for('quiz_management')}}"><i class="fa-solid fa-question"></i> Quiz</a>
                         {% elif current_user.__tablename__ == 'user' %}
-                            <a class="nav-link fs-5 px-3 py-2" href="{{ url_for('quiz_scores', user_id=current_user.id)}}">Scores</a>
+                            <a class="nav-link fs-5 px-3 py-2" href="{{ url_for('quiz_scores', user_id=current_user.id)}}"><i class="fa-solid fa-marker"></i> Scores</a>
                         {% endif %}
-                        <a class="nav-link fs-5 px-3 py-2" href="{{url_for('search')}}">Search</a>
-                        <a class="nav-link fs-5 px-3 py-2" href="{{url_for('summary')}}">Summary</a>
-                        <a class="nav-link fs-5 px-3 py-2" href="{{url_for('logout')}}">Logout</a>
+                        <a class="nav-link fs-5 px-3 py-2" href="{{url_for('search')}}"><i class="fa-solid fa-magnifying-glass"></i> Search</a>
+                        <a class="nav-link fs-5 px-3 py-2" href="{{url_for('summary')}}"><i class="fa-solid fa-chart-pie"></i> Summary</a>
+                        
+                    </div>
+                </div>
+
+                <div class="justify-content" id="navbarNavAltMarkup">
+                    <div class="navbar-nav ms-auto fs-5">
+                        <a class="nav-link fs-5 px-3 py-2" href="{{url_for('logout')}}">
+                            Logout <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        </a>
                     </div>
                 </div>
     
-                <!-- Right: Search Bar -->
+                <!-- Right: Search Bar
                 <form class="d-flex ms-auto">
                     <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
                     <button class="btn btn-outline-light" type="submit">Search</button>
-                </form>
+                </form> -->
     
                 {% if current_user.__tablename__ == 'Admin' %}
                 <!-- Right: Admin Profile -->
