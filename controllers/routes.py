@@ -548,9 +548,6 @@ def search():
     # Step 9: Render template with possible models and results
     return render_template('search.html', possible_models=model_options, results=results, search_by=search_by, search_text=search_text, column_names=col['displayable_columns'][current_user.__tablename__][search_by])
 
-@app.route("/test")
-def test():
-    return current_user.__tablename__
 
 # @app.route('/summary')
 # def summary():
@@ -781,6 +778,51 @@ def summary():
         return redirect(request.url)
 
 
+@app.route("/test")
+def test():
+    subject = Subject.query.filter_by(id=1).first()
+    return render_template('edit_subject.html', subject=subject) #hardcoded
+
+
+
+@app.route('/admin/chapter/edit/<int:chapter_id>', methods=['GET', 'POST'])
+def edit_chapter(chapter_id):
+    chapter = Chapter.query.get_or_404(chapter_id)
+    
+    if request.method == 'POST':
+        updated_name = request.form['name'].strip()
+        updated_description = request.form['description'].strip()
+
+        # Check if no changes were made
+        if chapter.name == updated_name and chapter.description == updated_description:
+            flash('No changes were made.', 'info')
+            return redirect(url_for('dashboard'))
+
+        # Check if another chapter with the same name or description exists in the same subject
+        existing_chapter = Chapter.query.filter(
+            Chapter.subject_id == chapter.subject_id,
+            (Chapter.name == updated_name) | (Chapter.description == updated_description),
+            Chapter.id != chapter.id  # Exclude the current chapter itself
+        ).first()
+
+        if existing_chapter:
+            flash('A chapter with this name or description already exists in this subject!', 'danger')
+            return redirect(url_for('edit_chapter', chapter_id=chapter.id))
+
+        # Update chapter details
+        chapter.name = updated_name
+        chapter.description = updated_description
+        
+        try:
+            db.session.commit()
+            flash('Chapter updated successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating chapter: {e}', 'danger')
+
+        return redirect(url_for('dashboard'))
+
+    return render_template('edit_chapter.html', chapter=chapter)
 
 
 

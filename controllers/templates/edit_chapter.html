@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Edit Chapter
+{% endblock %}
+
+{% block content %}
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div>
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="container col-xl-10 col-xxl-8 px-4 py-5">
+    <div class="row align-items-center g-lg-5 py-5">
+        <div class="col-md-10 mx-auto col-lg-6">
+            <form action="{{ url_for('edit_chapter', chapter_id=chapter.id) }}" method="POST" class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
+                <h4 class="text-center fs-2">Edit Chapter</h4>
+
+                <!-- Subject Name (Disabled) -->
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="subjectName" name="subject_name" value="{{ chapter.subject.name }}" disabled>
+                    <label for="subjectName">Subject Name</label>
+                </div>
+
+                <!-- Chapter ID (Disabled) -->
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="chapterID" name="chapter_id" value="{{ chapter.id }}" disabled>
+                    <label for="chapterID">Chapter ID</label>
+                </div>
+
+                <!-- Chapter Name -->
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="chapterName" name="name" value="{{ chapter.name }}" required>
+                    <label for="chapterName">Chapter Name</label>
+                </div>
+
+                <!-- Description -->
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" id="Description" name="description" required>{{ chapter.description }}</textarea>
+                    <label for="Description">Description</label>
+                </div>
+
+                <!-- Number of Quizzes -->
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="no_of_quizzes" name="no_of_quizzes" value="{{ chapter.no_of_quizes }}" disabled>
+                    <label for="no_of_quizzes">Number of Quizzes</label>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-auto">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-lg btn-outline-danger mx-2">Cancel</a>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-lg btn-outline-success mx-2" type="submit">Save Changes</button>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <small class="text-body-secondary">Ensure all details are accurate before saving changes.</small>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
