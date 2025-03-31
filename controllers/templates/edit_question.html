@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Edit Question
+{% endblock %}
+
+{% block content %}
+
+<div class="container col-xl-10 col-xxl-8 px-4 py-5">
+    <div class="row align-items-center g-lg-5 py-5">
+        <div class="col-md-10 mx-auto col-lg-6">
+            <form action="{{ url_for('edit_question', question_id=question.id) }}" method="POST" class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
+                <h4 class="text-center fs-2">Edit Question</h4>
+
+                <!-- Question ID (Disabled) -->
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="questionID" name="question_id" value="{{ question.id }}" disabled>
+                    <label for="questionID">Question ID</label>
+                </div>
+
+                <!-- Question Statement -->
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" id="questionStatement" name="statement" required>{{ question.question_statement }}</textarea>
+                    <label for="questionStatement">Question Statement</label>
+                </div>
+
+                <!-- Option A -->
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="optionA" name="option_a" value="{{ question.option1}}" required>
+                    <label for="optionA">Option 1</label>
+                </div>
+
+                <!-- Option B -->
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="optionB" name="option_b" value="{{ question.option2 }}" required>
+                    <label for="optionB">Option 2</label>
+                </div>
+
+                <!-- Option C -->
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="optionC" name="option_c" value="{{ question.option3 }}" required>
+                    <label for="optionC">Option 3</label>
+                </div>
+
+                <!-- Option D -->
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="optionD" name="option_d" value="{{ question.option4 }}" required>
+                    <label for="optionD">Option 4</label>
+                </div>
+
+                <!-- Correct Answer -->
+                <div class="form-floating mb-3">
+                    <select class="form-control" id="correctAnswer" name="correct_answer" required>
+                        <option value=1 {% if question.correct_option == 1 %}selected{% endif %}>Option 1</option>
+                        <option value=2 {% if question.correct_option == 2 %}selected{% endif %}>Option 2</option>
+                        <option value=3 {% if question.correct_option == 3 %}selected{% endif %}>Option 3</option>
+                        <option value=4 {% if question.correct_option == 4 %}selected{% endif %}>Option 4</option>
+                    </select>
+                    <label for="correctAnswer">Correct Answer</label>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-auto">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-lg btn-outline-danger mx-2">Cancel</a>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-lg btn-outline-success mx-2" type="submit">Save Changes</button>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <small class="text-body-secondary">Ensure all details are accurate before saving changes.</small>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

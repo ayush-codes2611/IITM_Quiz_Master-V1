@@ -1,51 +1,75 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Student_dashboard
-{% endblock %}
-
-
-{% block styles %}
+    Student Dashboard
 {% endblock %}
 
 {% block content %} 
     <div class="container mt-4">
-        
-        <!-- Upcoming Quiz -->
-            <h2>Upcoming Quizes</h2>
-            {% if quizes %}
-                <table class="table table-hover shadow mt-3">
-                    <thead>
+        <h2 class="mb-3">Upcoming Quizzes</h2>
+
+        {% if upcoming_quizzes %}
+            <table class="table table-hover shadow mt-3">
+                <thead>
+                    <tr>
+                        <th class="text-center">ID</th>
+                        <th class="text-center">No. of Questions</th>
+                        <th class="text-center">Date</th>
+                        <th class="text-center">Duration (hh:mm)</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quiz in upcoming_quizzes %}
                         <tr>
-                            <th scope="col" class="text-center">ID</th>
-                            <th scope="col" class="text-center">No. of Questions</th>
-                            <th scope="col" class="text-center">Date</th>
-                            <th scope="col" class="text-center">Duration(hh:mm)</th>
-                            <th scope="col" class="text-center">Action</th>
+                            <th class="text-center">{{ loop.index }}</th>
+                            <td class="text-center">{{ quiz.no_of_questions }}</td>
+                            <td class="text-center">{{ quiz.formatted_date }}</td>
+                            <td class="text-center">{{ quiz.time_duration }}</td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="{{ url_for('view_quiz', quiz_id=quiz.id) }}" class="btn btn-outline-primary btn-sm">View</a>
+                                    <a href="{{ url_for('exam_portal', quiz_id=quiz.id) }}" class="btn btn-outline-success btn-sm">Start</a>
+                                </div>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for quiz in quizes %}
-                            <tr>
-                                <th scope="col" class="text-center">{{ loop.index }}</th>
-                                <td class="text-center">{{quiz.no_of_questions}}</td>
-                                <td class="text-center">{{quiz.formatted_date}}</td>
-                                <td class="text-center">{{quiz.time_duration}}</td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <a href="{{url_for('view_quiz', quiz_id=quiz.id)}}" class="btn btn-outline-primary btn-sm">View</a>
-                                        <a href="{{url_for('exam_portal', quiz_id=quiz.id)}}" class="btn btn-outline-success btn-sm">Start</a>
-                                    </div>
-                                </td>
-                                
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <div class="container"><h3 style="color: #808080;">Oops! Seems like no upcoming quizes. They will added soon</h3></div>
-            {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-muted">No upcoming quizzes available. Stay tuned!</p>
+        {% endif %}
 
-
+        <h2 class="mt-5">Previous Quizzes</h2>
+        {% if previous_quizzes %}
+            <table class="table table-hover shadow mt-3">
+                <thead>
+                    <tr>
+                        <th class="text-center">ID</th>
+                        <th class="text-center">No. of Questions</th>
+                        <th class="text-center">Date</th>
+                        <th class="text-center">Duration (hh:mm)</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quiz in previous_quizzes %}
+                        <tr>
+                            <th class="text-center">{{ loop.index }}</th>
+                            <td class="text-center">{{ quiz.no_of_questions }}</td>
+                            <td class="text-center">{{ quiz.formatted_date }}</td>
+                            <td class="text-center">{{ quiz.time_duration }}</td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="{{ url_for('view_quiz', quiz_id=quiz.id) }}" class="btn btn-outline-primary btn-sm">Review</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-muted">No previous quizzes found.</p>
+        {% endif %}
     </div>
-{% endblock%}
+{% endblock %}

@@ -240,8 +240,14 @@ def add_quiz(chapter_id=None, subject_id=None):
         # Extract data from the form
         # chapter_id = int(request.form.get('chapterId'))
         # subject_id = int(request.form.get('subjectId'))
-        date_of_quiz = request.form.get('dateOfQuiz')
+        # Convert date string to datetime object (assuming format 'YYYY-MM-DD')
         time_duration = request.form.get('timeDuration')
+        date_of_quiz_str = request.form.get('quiz_date')
+        try:
+            date_of_quiz = datetime.strptime(date_of_quiz_str, "%Y-%m-%d")
+        except ValueError:
+            flash("Invalid date format. Please use YYYY-MM-DD.", "danger")
+            return redirect(request.url)
 
         # Create a new service instance
         new_quiz = Quiz(
@@ -256,6 +262,7 @@ def add_quiz(chapter_id=None, subject_id=None):
         # Add to the database
         try:
             db.session.add(new_quiz)
+            chapter.no_of_quizes +=1            
             db.session.commit()
             flash("Quiz added successfully!", "success")
             return redirect(url_for('quiz_management'))
@@ -279,7 +286,7 @@ def add_quiz(chapter_id=None, subject_id=None):
     return render_template('add_quiz.html', subjects=Subject.query.all(), chap_id=chapter_id, chap=chapter, sub_id=subject_id)
 
 
-@app.route('/get_chapters/<int:subject_id>')
+@app.route('/api/get_chapters/<int:subject_id>')
 def get_chapters(subject_id):
     # Query chapters belonging to the selected subject
     chapters = Chapter.query.filter_by(subject_id=subject_id).all()
@@ -338,31 +345,34 @@ def dashboard():
     # if role == 'admin':
     if isinstance(current_user, Admin):
         subjects = Subject.query.all()
-        return render_template('dashboard.html', subjects=subjects)
+        return render_template('admin_dashboard.html', subjects=subjects)
     
     # if role == 'customer':
     if isinstance(current_user, User):
         quizes = Quiz.query.all()
-        # return render_template('student_dashboard.html', quizes=quizes)
+        # return render_template('student_admin_dashboard.html', quizes=quizes)
         return redirect(url_for('student_dashboard'))
     
-    return render_template('dashboard.html')
+    return render_template('admin_dashboard.html')
 
 # Student Interactions
 @app.route('/student_dashboard')
 @login_required
 def student_dashboard():
     today = datetime.now().date()
+    print(today)
     
     # Fetch all quizzes
     quizes = Quiz.query.all()
 
     # Separate upcoming and previous quizzes
     upcoming_quizzes = [quiz for quiz in quizes if quiz.date_of_quiz.date() >= today]
+    # print(upcoming_quizzes.date_of_quiz)
     previous_quizzes = [quiz for quiz in quizes if quiz.date_of_quiz.date() < today]
+    # print(previous_quizzes.date_of_quiz)
 
-    return render_template('student_dashboard2.html', 
-                           upcoming_quizzes=quizes, 
+    return render_template('student_dashboard.html', 
+                           upcoming_quizzes=upcoming_quizzes, 
                            previous_quizzes=previous_quizzes)
 
 
@@ -555,7 +565,8 @@ def search():
 #     os.makedirs(save_dir, exist_ok=True)  # Create the directory if it doesn't exist
 #     try: 
 #         if isinstance(current_user, Admin):
-@app.route('/admin-summary-stats')
+@app.route('/api/admin-summary-stats')
+@login_required
 def admin_summary_stats():
     subjects = [row[0] for row in db.session.query(Subject.name).all()]
 
@@ -825,4 +836,71 @@ def edit_chapter(chapter_id):
     return render_template('edit_chapter.html', chapter=chapter)
 
 
+@app.route('/delete_chapter/<int:chapter_id>', methods=['POST'])
+@login_required
+def delete_chapter(chapter_id):
+    chapter = Chapter.query.get_or_404(chapter_id)
+
+    try:
+        db.session.delete(chapter)
+        db.session.commit()
+        flash("Chapter and its related quizzes & questions deleted successfully!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting chapter: {str(e)}", "danger")
+
+    return redirect(url_for('dashboard'))
+
+@app.route('/edit_question/<int:question_id>', methods=['GET', 'POST'])
+@login_required
+def edit_question(question_id):
+    question = Question.query.get_or_404(question_id)
+
+    if request.method == 'POST':
+        # Get the form data
+        new_statement = request.form['statement'].strip()
+        new_option_a = request.form['option_a'].strip()
+        new_option_b = request.form['option_b'].strip()
+        new_option_c = request.form['option_c'].strip()
+        new_option_d = request.form['option_d'].strip()
+        new_correct_answer = request.form['correct_answer'].strip()
+
+        # Check if any changes were made
+        if (
+            question.question_statement == new_statement and
+            question.option1 == new_option_a and
+            question.option2 == new_option_b and
+            question.option3 == new_option_c and
+            question.option4 == new_option_d and
+            question.correct_option == new_correct_answer
+        ):
+            flash('No changes made!', 'warning')
+        else:
+            # Update the question
+            question.question_statement = new_statement
+            question.option1 = new_option_a
+            question.option2 = new_option_b
+            question.option3 = new_option_c
+            question.option4= new_option_d
+            question.correct_option = new_correct_answer
+
+            db.session.commit()
+            flash('Question updated successfully!', 'success')
+
+        return redirect(url_for('quiz_management'))  # Change to your appropriate route
+
+    return render_template('edit_question.html', question=question)
+
+
+@app.route('/delete_question/<int:question_id>', methods=['POST'])
+@login_required
+def delete_question(question_id):
+    question = Question.query.get_or_404(question_id)
+
+    # Delete the question
+    db.session.delete(question)
+    db.session.commit()
+    flash('Question deleted successfully!', 'danger')
+
+    return redirect(url_for('quiz_management'))
 
